@@ -3,10 +3,13 @@ package com.astralsmp;
 import com.astralsmp.commands.LinkingSystem;
 import com.astralsmp.events.LinkComponentCallback;
 import com.astralsmp.exceptions.InitTableException;
+import com.astralsmp.modules.Config;
 import com.astralsmp.modules.Discord;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.security.auth.login.LoginException;
+import java.io.IOException;
 import java.util.logging.Logger;
 
 // TODO: 26.07.2021 закончить оформление класса
@@ -22,7 +25,16 @@ public class AstralThread extends JavaPlugin {
 
     @Override
     public void onEnable() {
-
+        /*
+        Блок кода для инициализации конфига и всей подобной дряни, которая с ним связанна
+        Данный блок должен иметь первый приоритет при запуске плагина!!!
+         */
+        Config config = new Config(this);
+        try {
+            config.initialize();
+        } catch (IOException | InvalidConfigurationException e) {
+            e.printStackTrace();
+        }
         /*
         Блок кода ниже для инициализации необходимой дресни, которая связанна
         с инициализацией таблиц в базе данных
@@ -37,7 +49,7 @@ public class AstralThread extends JavaPlugin {
         которая связанна с Дискордом
          */
         try {
-            Discord.initialize("ODYyNzU2MTIxMTc2NDQwODMz.YOc-QA.3wieV86V8kDCGzhzuiuTHTL9GkE");
+            Discord.initialize();
         } catch (LoginException | InterruptedException e) {
             e.printStackTrace();
         }
