@@ -1,0 +1,5 @@
+name: AstralThread
+main: ${group}.AstralThread
+version: ${version}
+author: KatanaMajesty
+api-version: 1.17
