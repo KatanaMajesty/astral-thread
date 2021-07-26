@@ -6,6 +6,10 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+/**
+ * Стандартный класс для инициализации соединения с базой данных
+ * Использую HikariCP, пока очень радует ♥
+ */
 public class Database {
 
     public static final String dbName = "astraldatabase.db";
@@ -13,6 +17,9 @@ public class Database {
     private static final HikariConfig config = new HikariConfig();
     private static final HikariDataSource dataSource;
 
+    /*
+     * Статический блок инициализации. Добавляем параметры в конфиг Hikari, создаёт dataSource через параметры конфига
+     */
     static {
         config.setJdbcUrl(URL);
         config.addDataSourceProperty( "cachePrepStmts" , "true" );
@@ -22,6 +29,12 @@ public class Database {
         dataSource = new HikariDataSource(config);
     }
 
+    /**
+     * Метод для получения статического объекта соединения с бд
+     *
+     * @return возвращает соединения с базой данных
+     * @throws SQLException выкидывается если при подключении к бд возникла непредвиденная ошибка
+     */
     public static Connection getConnection() throws SQLException {
         return dataSource.getConnection();
     }
