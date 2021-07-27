@@ -102,7 +102,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
     }
 
     /**
-     *
+     * Метод для удаления игрока из базы данных привязанных игроков перед его выходом с сервера.
      * @param event срабатывает при выходе с сервера
      */
     @Override
@@ -110,6 +110,11 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
         removePlayer(event.getUser());
     }
 
+    /**
+     * Когда игрок выходит с сервера в Майнкрафте, я удаляю его из коллекции незавершённых привязок/отвязок,
+     * чтобы при входе он снова смог привязать/отвязать аккаунт
+     * @param event срабатывает при выходе игрока с сервера
+     */
     @EventHandler
     public void onLinkingLeave(PlayerQuitEvent event) {
         UNFINISHED.remove(event.getPlayer());
