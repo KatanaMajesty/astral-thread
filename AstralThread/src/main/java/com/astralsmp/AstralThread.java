@@ -35,15 +35,7 @@ public class AstralThread extends JavaPlugin {
         } catch (IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
-        /*
-        Блок кода ниже для инициализации необходимой дресни, которая связанна
-        с инициализацией таблиц в базе данных
-         */
-        try {
-            LinkingSystem.initTable();
-        } catch (InitTableException e) {
-            e.printStackTrace();
-        }
+
         /*
         Блок кода ниже должен использоваться только для инициализации всякой дряни,
         которая связанна с Дискордом
@@ -51,6 +43,16 @@ public class AstralThread extends JavaPlugin {
         try {
             Discord.initialize();
         } catch (LoginException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        /*
+        Блок кода ниже для инициализации необходимой дресни, которая связанна
+        с инициализацией таблиц в базе данных
+         */
+        try {
+            LinkingSystem.initTable();
+        } catch (InitTableException e) {
             e.printStackTrace();
         }
 

@@ -3,6 +3,7 @@ package com.astralsmp.modules;
 import com.astralsmp.commands.LinkingSystem;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Guild;
 
 import javax.security.auth.login.LoginException;
 
@@ -13,7 +14,7 @@ import javax.security.auth.login.LoginException;
 public class Discord {
 
     public static JDA jda = null;
-    public static final String GUILD_ID = Config.getDiscordConfig().getString("DiscordClass.guild_id");
+    public static Guild GUILD = null;
     public static final char PREFIX = '!';
     private static final String TOKEN = Config.getDiscordConfig().getString("DiscordClass.token");
 
@@ -27,8 +28,12 @@ public class Discord {
      */
     public static void initialize() throws LoginException, InterruptedException {
         jda = JDABuilder.createDefault(TOKEN).build();
-        jda.addEventListener(new LinkingSystem());
         jda.awaitReady();
+
+        GUILD = jda.getGuildById(Config.getDiscordConfig().getLong("DiscordClass.guild_id"));
+        System.out.println(GUILD);
+
+        jda.addEventListener(new LinkingSystem());
     }
 
     /**
