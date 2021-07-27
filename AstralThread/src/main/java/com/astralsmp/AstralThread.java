@@ -60,6 +60,7 @@ public class AstralThread extends JavaPlugin {
         Блок кода ниже для объявления новых ивентов и команд
          */
         getServer().getPluginManager().registerEvents(new LinkComponentCallback(), this);
+        getServer().getPluginManager().registerEvents(new LinkingSystem(), this);
 
         // Логируем всё что нужно
         LOG.info("Включён");

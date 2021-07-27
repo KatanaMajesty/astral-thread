@@ -9,8 +9,9 @@ import com.astralsmp.modules.Database;
 import com.astralsmp.modules.Discord;
 import com.astralsmp.modules.Formatter;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
-import net.dv8tion.jda.api.exceptions.ContextException;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -21,11 +22,13 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.*;
 import java.util.*;
-import java.util.function.Consumer;
 
 // TODO: 26.07.2021 Спам проверка
 // TODO: 26.07.2021 Проверка на нажатие кнопок
@@ -36,12 +39,12 @@ import java.util.function.Consumer;
  * для инициализации таблицы
  * @see LinkingSystem#initTable()
  */
-public class LinkingSystem extends ListenerAdapter {
+public class LinkingSystem extends ListenerAdapter implements Listener {
 
     private final Guild GUILD = Discord.GUILD;
     private final String LINKED_ROLE_ID = Config.getDiscordConfig().getString("LinkingSystemClass.linked_role");
     private final Role LINKED_ROLE = GUILD == null ? null : GUILD.getRoleById(LINKED_ROLE_ID);
-    private static final Map<String, Player> UNFINISHED = new HashMap<>();
+    private static final Map<Player, String> UNFINISHED = new HashMap<>();
 
     private static final char PREFIX = Discord.PREFIX;
     private static final String LINK_TABLE = AstralThread.LINK_TABLE;
@@ -98,6 +101,21 @@ public class LinkingSystem extends ListenerAdapter {
         }
     }
 
+    /**
+     *
+     * @param event срабатывает при выходе с сервера
+     */
+    @Override
+    public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
+        removePlayer(event.getUser());
+    }
+
+    @EventHandler
+    public void onLinkingLeave(PlayerQuitEvent event) {
+        UNFINISHED.remove(event.getPlayer());
+    }
+
+    // TODO: 27.07.2021 Если пользователь вышел с сервера - удалить его из базы данных
     // TODO: 26.07.2021 закончить оформление метода
     // TODO: 27.07.2021 Если аккаунт цели уже привязан - отменить
     // TODO: 27.07.2021 при отвязке забирать роль
@@ -164,7 +182,7 @@ public class LinkingSystem extends ListenerAdapter {
         Здесь я проверяю, не отправил ли отправитель сообщения запрос об отвязке/привязке аккаунта.
         Если его Discord ID находится в коллекции - отменяю запрос о привязке
          */
-        if (UNFINISHED.containsKey(sender.getId())) {
+        if (UNFINISHED.containsValue(sender.getId())) {
             channel.sendMessage("Вы не завершили предыдущую привязку или отвязку").queue();
             return;
         }
@@ -173,7 +191,7 @@ public class LinkingSystem extends ListenerAdapter {
         Здесь я выполняю проверку на наличии объекта цели, к которой пытаются привязать аккаунт.
         Если данной цели уже отправили запрос о привязке/отвязке - отменяю новый запрос во избежание спама
          */
-        if (UNFINISHED.containsValue(target)) {
+        if (UNFINISHED.containsKey(target)) {
             channel.sendMessage("Кто-то уже отправил запрос о привязке/отвязке этому аккаунту").queue();
             return;
         }
@@ -196,7 +214,7 @@ public class LinkingSystem extends ListenerAdapter {
         MessageChannel channel = event.getChannel();
         User sender = event.getAuthor();
         String targetName = target.getDisplayName();
-        UNFINISHED.put(sender.getId(), target);
+        UNFINISHED.put(target, sender.getId());
         target.sendMessage("Получен запрос на привязку аккаунта к Дискорду " + sender.getAsTag());
 
         /*
@@ -221,7 +239,6 @@ public class LinkingSystem extends ListenerAdapter {
         /*
         Данный блок кода позволяет мне, помимо обычного выполнения майнкрафт команды,
         так же выполнять блоки кода, которые реализованы через калбэк
-        TODO 26.07.21 Закончить калбэки, добавить проверку на нажатую кнопку
         TODO 26.07.21 Настроить эмбеды
         TODO 26.07.21 Настроить HEX
          */
@@ -232,12 +249,13 @@ public class LinkingSystem extends ListenerAdapter {
             и позволяю ему сделать это.
             По нажатии на кнопку все остальные кнопки станут недоступны, так как тоже содержат в себе эту строку.
              */
-            if (!UNFINISHED.containsValue(player)) return;
+            if (!UNFINISHED.containsKey(player)) return;
             /*
             Выполняю проверку на правильность созданных объектов сервера и роли.
             Если всё в порядке - игнорирую if
              */
             if (GUILD == null | LINKED_ROLE == null) {
+                UNFINISHED.remove(player);
                 player.sendMessage("⌀ Ошибка. Подробности были отправлены Вам в ЛС Дискорда");
                 channel.sendMessage("Мне не удалось выдать Вам роль на нашем Дискорд сервере. Обратитесь к модерации").queue(null, ignored -> {});
                 channel.sendMessage("Привязка аккаунтов была отменена").queue(null, ignored -> {});
@@ -249,10 +267,16 @@ public class LinkingSystem extends ListenerAdapter {
             Бот не может выдавать другим роль, которая равна его наивысшей роли или роли выше
              */
             try {
-                GUILD.addRoleToMember(sender.getId(), LINKED_ROLE).queue();
+                Member member = GUILD.retrieveMember(sender).complete();
+                GUILD.addRoleToMember(member.getId(), LINKED_ROLE).queue();
             } catch (HierarchyException e) {
+                UNFINISHED.remove(player);
                 player.sendMessage("⌀ Ошибка. Подробности были отправлены Вам в ЛС Дискорда");
-                channel.sendMessage("У меня недостаточно прав для выдачи роли привязанного игрока. Обратитесь к модерации").queue(null, ignored -> {});
+                channel.sendMessage("У меня недостаточно прав для выдачи роли привязанного игрока. Обратитесь к модерации: " + e.getStackTrace()[0]).queue(null, ignored -> {});
+                return;
+            } catch (ErrorResponseException e) {
+                UNFINISHED.remove(player);
+                player.sendMessage("Не удалось привязать аккаунт, так как мне не удалось найти Вас на нашем сервере");
                 return;
             }
             /*
@@ -261,7 +285,7 @@ public class LinkingSystem extends ListenerAdapter {
             insertPlayer(target, sender);
             player.sendMessage(String.format("Ваш аккаунт успешно привязан к Дискорду %s! Приятной игры", sender.getAsTag()));
             channel.sendMessage("Ваш Дискорд аккаунт был успешно привязан к " + targetName).queue(null, ignored -> {});
-            UNFINISHED.remove(sender.getId());
+            UNFINISHED.remove(player);
         });
         LinkComponentCallback.execute(cancel, player -> {
             /*
@@ -270,9 +294,9 @@ public class LinkingSystem extends ListenerAdapter {
             и позволяю ему сделать это.
             По нажатии на кнопку все остальные кнопки станут недоступны, так как тоже содержат в себе эту строку.
              */
-            if (!UNFINISHED.containsValue(player)) return;
+            if (!UNFINISHED.containsKey(player)) return;
             channel.sendMessage(String.format("Владелец аккаунта %s отклонил запрос о привязке аккаунтов", targetName)).queue(null, ignored -> {});
-            UNFINISHED.remove(sender.getId());
+            UNFINISHED.remove(player);
         });
         LinkComponentCallback.execute(spam, player -> {
             /*
@@ -281,10 +305,10 @@ public class LinkingSystem extends ListenerAdapter {
             и позволяю ему сделать это.
             По нажатии на кнопку все остальные кнопки станут недоступны, так как тоже содержат в себе эту строку.
              */
-            if (!UNFINISHED.containsValue(player)) return;
+            if (!UNFINISHED.containsKey(player)) return;
             SPAM_MAP.add(new AbstractMap.SimpleEntry<>(sender.getId(), player.getUniqueId()));
             channel.sendMessage("Ваши попытки привязки были обозначены спамом. Более Вы не сможете отправлять запрос о привязке на данный аккаунт").queue(null, ignored -> {});
-            UNFINISHED.remove(sender.getId());
+            UNFINISHED.remove(player);
         });
 
         // отдаём BaseComponent другому методу, который обработает его и отправит пользователю на сервер
@@ -329,7 +353,7 @@ public class LinkingSystem extends ListenerAdapter {
         Здесь я проверяю, не отправил ли отправитель сообщения запрос об отвязке/привязке аккаунта.
         Если его Discord ID находится в коллекции - отменяю запрос о привязке
          */
-        if (UNFINISHED.containsKey(sender.getId())) {
+        if (UNFINISHED.containsValue(sender.getId())) {
             channel.sendMessage("Вы не завершили предыдущую привязку или отвязку").queue();
             return;
         }
@@ -338,7 +362,7 @@ public class LinkingSystem extends ListenerAdapter {
         Здесь я выполняю проверку на наличии объекта цели, к которой пытаются привязать аккаунт.
         Если данной цели уже отправили запрос о привязке/отвязке - отменяю новый запрос во избежание спама
          */
-        if (UNFINISHED.containsValue(target)) {
+        if (UNFINISHED.containsKey(target)) {
             channel.sendMessage("Кто-то уже отправил запрос о привязке/отвязке этому аккаунту").queue();
             return;
         }
@@ -364,7 +388,7 @@ public class LinkingSystem extends ListenerAdapter {
          */
         User sender = event.getAuthor();
         MessageChannel channel = event.getChannel();
-        UNFINISHED.put(sender.getId(), target);
+        UNFINISHED.put(target, sender.getId());
 
         TextComponent accept = new TextComponent("✔ Отвязать");
         TextComponent cancel = new TextComponent("⌀ Отмена");
@@ -378,39 +402,59 @@ public class LinkingSystem extends ListenerAdapter {
 
         LinkComponentCallback.execute(accept, player -> {
             /*
+            Создаю объект member, и проверяю есть ли этот пользователь на нашем сервере
+            Если его нет - возвращаю ошибку
+             */
+            if (GUILD == null) {
+                UNFINISHED.remove(player);
+                player.sendMessage("Не удалось получить объект сервера. Свяжитесь с модераторами");
+                return;
+            }
+
+            /*
             Выполняю проверку на правильность созданных объектов сервера и роли.
             Если всё в порядке - игнорирую if
              */
-            if (GUILD == null | LINKED_ROLE == null) {
+            if (LINKED_ROLE == null) {
+                UNFINISHED.remove(player);
                 player.sendMessage("⌀ Ошибка. Подробности были отправлены Вам в ЛС Дискорда");
                 channel.sendMessage("Мне не удалось выдать Вам роль на нашем Дискорд сервере. Обратитесь к модерации").queue(null, ignored -> {});
                 channel.sendMessage("Привязка аккаунтов была отменена").queue(null, ignored -> {});
                 return;
             }
-            /*
-            Создаю объект member, и проверяю есть ли этот пользователь на нашем сервере
-            Если его нет - возвращаю ошибку
-             */
-            Member member = GUILD.retrieveMember(sender).complete();
-            if (member == null) {
-                channel.sendMessage("Мне не удалось найти Вас на нашем сервере").queue(null, ignored -> {});
-                return;
-            }
+
             /*
             В строке ниже я проверяю, завершил ли пользователь привязку.
             Если пользователь находится в коллекции UNFINISHED - делаю вид, что он ещё не нажал на кнопку
             и позволяю ему сделать это.
             По нажатии на кнопку все остальные кнопки станут недоступны, так как тоже содержат в себе эту строку.
              */
-            if (!UNFINISHED.containsValue(player)) return;
+            if (!UNFINISHED.containsKey(player)) return;
 
             // Убираю роль при отвязке
-            GUILD.removeRoleFromMember(member, LINKED_ROLE).queue();
+            try {
+                Member member = GUILD.retrieveMember(sender).complete();
+                if (member == null) {
+                    UNFINISHED.remove(player);
+                    player.sendMessage("Мне не удалось найти Вас на нашем сервере");
+                    return;
+                }
+                GUILD.removeRoleFromMember(member, LINKED_ROLE).queue();
+            } catch (HierarchyException e) {
+                UNFINISHED.remove(player);
+                player.sendMessage("⌀ Ошибка. Подробности были отправлены Вам в ЛС Дискорда");
+                channel.sendMessage("У меня недостаточно прав для выдачи роли привязанного игрока. Обратитесь к модерации: " + e.getStackTrace()[0]).queue(null, ignored -> {});
+                return;
+            } catch (ErrorResponseException e) {
+                UNFINISHED.remove(player);
+                player.sendMessage("Не удалось отвязать аккаунт, так как мне не удалось найти Вас на нашем сервере");
+                return;
+            }
 
             removePlayer(sender);
             channel.sendMessage("Ваш аккаунт был успешно отвязан. Жду не дождусь вновь его привязать!").queue(null, ignored -> {});
             player.sendMessage(Formatter.colorize(String.format("#dbdbdbДискорд аккаунт %s более не привязан к Вашему Майнкрафт аккаунту", sender.getAsTag())));
-            UNFINISHED.remove(sender.getId());
+            UNFINISHED.remove(player);
         });
         LinkComponentCallback.execute(cancel, player -> {
             /*
@@ -419,16 +463,15 @@ public class LinkingSystem extends ListenerAdapter {
             и позволяю ему сделать это.
             По нажатии на кнопку все остальные кнопки станут недоступны, так как тоже содержат в себе эту строку.
              */
-            if (!UNFINISHED.containsValue(player)) return;
+            if (!UNFINISHED.containsKey(player)) return;
             channel.sendMessage("Отвязка аккаунтов была отклонена. Можно ведь и не отвязывать вовсе :)").queue(null, ignored -> {});
             player.sendMessage(Formatter.colorize("#dbdbdbОтвязка аккаунтов была успешно отменена"));
-            UNFINISHED.remove(sender.getId());
+            UNFINISHED.remove(player);
         });
 
         return new TextComponent(accept, slash, cancel);
     }
 
-    // TODO: 26.07.2021 Убрать printStackTrace()
     /**
      * Метод для добавления данных об игроке в базу данных. Вызывается только когда пользователь Дискорд пытается привязать свой аккаунт
      * к игроку в Майнкрафт.
@@ -450,7 +493,6 @@ public class LinkingSystem extends ListenerAdapter {
         }
     }
 
-    // TODO: 26.07.2021 Убрать printStackTrace()
     /**
      * Метод для удаления данных об игроке из базы данных. Метод должен вызываться только в время
      * отвязки аккаунтов по команде. Нет смысла делать его public
@@ -477,7 +519,6 @@ public class LinkingSystem extends ListenerAdapter {
     to dangle around and cause the DB to run out of resources when there are too many of them open.
      */
 
-    // TODO: 26.07.2021 Убрать printStackTrace()
     /**
      * Метод обрабатывает Discord ID пользователя, который пытается отвязать свой аккаунт.
      * Возвращает имя игрока в Майнкрафт, к которому привязан аккаунт Дискорд.
