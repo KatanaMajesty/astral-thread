@@ -38,6 +38,7 @@ public class Config {
      * @see Config#initialize()
      *
      * @return возвращает Дискорд конфиг объекта FileConfiguration
+     * @throws NullPointerException если не удалось загрузить конфиг
      */
     public static FileConfiguration getDiscordConfig() {
         if (discordConfig == null) throw new NullPointerException("discord.yml == null");
@@ -52,6 +53,7 @@ public class Config {
      * @see Config#initialize()
      *
      * @return возвращает дефолтный конфиг объект FileConfiguration
+     * @throws NullPointerException если не удалось загрузить конфиг
      */
     public static FileConfiguration getConfig() {
         if (config == null) throw new NullPointerException("config.yml == null");
