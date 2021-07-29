@@ -1,1 +1,12 @@
-someval: val
+Database:
+  database_type: sqlite
+  database_host: localhost
+  database_port: 3306
+  database_name: astralthread.db
+  database_user: root
+  database_pass: somepass
+ColorPalette:
+  green: '&#37d90f'
+  red: '&#f21d1d'
+  yellow: '&#ffd30f'
+  gray: '&#bfbfbf'

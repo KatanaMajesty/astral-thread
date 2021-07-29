@@ -4,10 +4,8 @@ import com.astralsmp.commands.LinkingSystem;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.requests.GatewayIntent;
 
 import javax.security.auth.login.LoginException;
-import java.util.EnumSet;
 
 /**
  * Статический класс для работы с Дискорд ботом сервера.
@@ -29,7 +27,7 @@ public class Discord {
      *                              and if so, to immediately throw this exception.
      */
     public static void initialize() throws LoginException, InterruptedException {
-        jda = JDABuilder.createDefault(TOKEN, EnumSet.allOf(GatewayIntent.class)).build();
+        jda = JDABuilder.createDefault(TOKEN).build();
         jda.awaitReady();
 
         String guildId = Config.getDiscordConfig().getString("DiscordClass.guild_id");

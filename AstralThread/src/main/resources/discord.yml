@@ -3,3 +3,4 @@ DiscordClass:
   token: 'ODYyNzU2MTIxMTc2NDQwODMz.YOc-QA.3wieV86V8kDCGzhzuiuTHTL9GkE'
 LinkingSystemClass:
   linked_role: '869308645194735656'
+  cooldown_bypass_role: '741639199861506179'
