@@ -32,8 +32,7 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-
-
+// TODO: 29.07.2021 По приезду можно сделать настройку через конфиг 
 // TODO: 26.07.2021 Команда для отвязки для модерации
 /**
  * Система привязки аккаунтов между Дискордом и Майнкрафтом.
@@ -50,15 +49,16 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
     }
     
     // Нужная палитра цветов
-    private final String GREEN = Config.getConfig().getString("ColorPalette.green");
-    private final String RED = Config.getConfig().getString("ColorPalette.red");
-    private final String YELLOW = Config.getConfig().getString("ColorPalette.yellow");
-    private final String GRAY = Config.getConfig().getString("ColorPalette.gray");
+    private static final String GREEN = Config.getConfig().getString("ColorPalette.green");
+    private static final String RED = Config.getConfig().getString("ColorPalette.red");
+    private static final String YELLOW = Config.getConfig().getString("ColorPalette.yellow");
+    private static final String GRAY = Config.getConfig().getString("ColorPalette.gray");
 
     private final Guild GUILD = Discord.GUILD;
     private final CooldownManager COOLDOWN_MANAGER = new CooldownManager();
     private final String LINKED_ROLE_ID = Config.getDiscordConfig().getString("LinkingSystemClass.linked_role");
     private final String COOLDOWN_ROLE_ID = Config.getDiscordConfig().getString("LinkingSystemClass.cooldown_bypass_role");
+    private final long EXPIRE_AFTER = Config.getConfig().getLong("LinkingSystem.expire_after_secs");
     private final Role LINKED_ROLE;
 
     {
@@ -120,7 +120,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
                 if (secondsLeft < CooldownManager.DEFAULT_COOLDOWN) {
                     int[] formattedLeft = CooldownManager.splitTimeArray(CooldownManager.DEFAULT_COOLDOWN - secondsLeft);
                     channel.sendMessageEmbeds(
-                            embedBuilder(sender, String.format("Подожди ещё %d:%d перед отправкой следующей заявки", formattedLeft[1], formattedLeft[2]), CommandState.ERROR))
+                            embedBuilder(sender, String.format("Подождите ещё %d:%d перед отправкой следующей заявки", formattedLeft[1], formattedLeft[2]), CommandState.ERROR))
                             .queue();
                     return true;
                 }
@@ -129,9 +129,38 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
                 return false;
             }
         } else {
-            System.out.println("Не удалось установить кд для пользователя " + sender.getAsTag());
+            System.out.println("Не удалось установить КД для пользователя " + sender.getAsTag());
         }
         return false;
+    }
+
+    /**
+     * Метод для запуска кд на принятие запроса. Я сделал это, чтобы коллекции постоянно чистились и не забивались. Мало-ли, кто-то захочет забить, хз
+     * Данный метод имеет много параметров, поэтому практически нигде не будет иметь применения, поэтому private
+     * Контент метода меняется в зависимости от последнего параметра - логического оператора
+     *
+     * @param sender отправитель запроса
+     * @param channel канал, в котором был запрос. В основном это будет ЛС с ботом, но в случае с модерацией, может быть, имеют место быть исключения.
+     * @param target цель, которой отправлен запрос
+     * @param EXPIRE_AFTER секунды, после которых запрос будет отменён
+     * @param link контент должен соответствовать привязке или отвязке?
+     */
+    private void requestExpire(User sender, MessageChannel channel, Player target, long EXPIRE_AFTER, boolean link) {
+        long expireAfterSecs = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) + EXPIRE_AFTER;
+        while(UNFINISHED.containsKey(target)) {
+            if (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) > expireAfterSecs) {
+                String formMsg = link
+                        ? RED + String.format("Вы не реагировали на запрос о привязке в течении %d секунд, поэтому он был отклонён автоматически", EXPIRE_AFTER)
+                        : RED + String.format("Вы не реагировали на запрос об отвязке в течении %d секунд, поэтому он был отклонён автоматически", EXPIRE_AFTER);
+                String desc = link
+                        ? "Аккаунт, к которому Вы попытались привязать аккаунт, не отреагировал на привязку. Запрос был отклонён"
+                        : "Аккаунт, к которому Вы попытались привязать аккаунт, не отреагировал на отвязку. Запрос был отклонён";
+                Formatter form = new Formatter(target);
+                form.sendMessage(formMsg);
+                channel.sendMessageEmbeds(embedBuilder(sender, desc, CommandState.ERROR)).queue();
+                UNFINISHED.remove(target);
+            }
+        }
     }
 
     /**
@@ -151,7 +180,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
                 embedColor = Formatter.hexColorToRGB(GREEN);
             }
             case SPAM -> {
-                title = "Ошибка!";
+                title = "Чел, ты в спаме!";
                 embedColor = Formatter.hexColorToRGB(YELLOW);
             }
             case ERROR -> {
@@ -197,14 +226,10 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
         if (event.getMessage().getContentRaw().startsWith(String.valueOf(PREFIX))) {
             String[] args = event.getMessage().getContentRaw().split(" ");
             switch (args[0]) {
-                case PREFIX + "привязать" -> {
-                    // привязка
-                    if(isOnCooldown(event)) return;
-                    onLinkCommand(event, args);
-                }
+                case PREFIX + "привязать" -> // привязка
+                        onLinkCommand(event, args);
                 case PREFIX + "отвязать" -> {
                     // отвязка
-                    if(isOnCooldown(event)) return;
                     try {
                         onUnlinkCommand(event, args);
                     } catch (SQLException exception) {
@@ -234,10 +259,6 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
         UNFINISHED.remove(event.getPlayer());
     }
 
-    // TODO: 27.07.2021 Если пользователь вышел с сервера - удалить его из базы данных
-    // TODO: 26.07.2021 закончить оформление метода
-    // TODO: 27.07.2021 Если аккаунт цели уже привязан - отменить
-    // TODO: 27.07.2021 при отвязке забирать роль
     /**
      * Метод, который вызывается командой !привязать.
      * Данный метод возможен только при взаимодействии с ботом через личные сообщения пользователя
@@ -255,7 +276,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
         Если в сообщении нет 2 аргументов - мы жалуемся на это и отказываемся выполнять команду
         */
         if (args.length != 2) {
-            channel.sendMessageEmbeds(embedBuilder(sender, "Неверное количество аргументов. Синтаксис: `!привязать [ник игрока в Майнкрафт]`", CommandState.ERROR)).queue();
+            channel.sendMessageEmbeds(embedBuilder(sender, "Неверное количество аргументов.\nСинтаксис: `!привязать [ник игрока в Майнкрафт]`", CommandState.ERROR)).queue();
             return;
         }
         /*
@@ -320,10 +341,24 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
                     CommandState.ERROR)).queue();
             return;
         }
+
+        // ВАЖНО! ЭТА ПРОВЕРКА ДОЛЖНА ИДТИ В ПОСЛЕДНЮЮ ОЧЕРЕДЬ ПЕРЕД ОТПРАВКОЙ!
+        /*
+        Если у участника уже есть кд - игнорируем.
+        Если кд не найден - присваиваем участнику кд.
+         */
+        if(isOnCooldown(event)) return;
+
         // отправляем заявку на привязку
         channel.sendMessageEmbeds(embedBuilder(sender, "Запрос на привязку Вашего Дискорд аккаунта был успешно отправлен " + target.getDisplayName(), CommandState.SUCCESS))
                 .queue();
         target.spigot().sendMessage(linkComponents(target, event));
+
+        /*
+        Запускаю цикл, в котором жду действия от пользователя в течении определённого количества секунд
+        Если в течении этого времени он не реагирует на запрос - отклоняю его
+         */
+        requestExpire(sender, channel, target, EXPIRE_AFTER, true);
     }
 
     // TODO: 26.07.2021 закончить оформление метода
@@ -345,10 +380,10 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
 
         /* Если target не null - создаю объект форматтера
         Крайне важная хуйня. Позволяет избавиться от лишнего текста и прочего.
-        Очень рекомендую использовать, если отправляется сообщение только одному игроку
+        Очень рекомендую использовать, если отправляется сообщение только одному игроку или если ты не долбоёб
          */
         Formatter form = new Formatter(target);
-        form.sendMessage("Получен запрос на привязку аккаунта к Дискорду " + sender.getAsTag());
+        form.sendMessage(GRAY + "Получен запрос на привязку аккаунта к " + sender.getAsTag());
 
         /*
         Создаю все компоненты, инициализирую.
@@ -389,7 +424,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
              */
             if (GUILD == null | LINKED_ROLE == null) {
                 UNFINISHED.remove(player);
-                form.sendMessage("⌀ Ошибка. Подробности были отправлены Вам в ЛС Дискорда");
+                form.sendMessage(RED + "Не удалось завершить привязку. Подробности были отправлены в Дискорд");
                 channel.sendMessageEmbeds(embedBuilder(sender,
                         "Мне не удалось выдать Вам роль на нашем Дискорд сервере. Обратитесь к модерации.\n" +
                                 "Привязка аккаунтов была отменена", CommandState.ERROR)).queue(null, ignored -> {});
@@ -405,21 +440,21 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
                 GUILD.addRoleToMember(member.getId(), LINKED_ROLE).queue();
             } catch (HierarchyException e) {
                 UNFINISHED.remove(player);
-                form.sendMessage("⌀ Ошибка. Подробности были отправлены Вам в ЛС Дискорда");
+                form.sendMessage(RED + "Не удалось завершить привязку. Подробности были отправлены в Дискорд");
                 channel.sendMessageEmbeds(embedBuilder(sender,
                         "У меня недостаточно прав для выдачи роли привязанного игрока.\nОбратитесь к модерации: " + e.getStackTrace()[0], CommandState.ERROR))
                         .queue(null, ignored -> {});
                 return;
             } catch (ErrorResponseException e) {
                 UNFINISHED.remove(player);
-                form.sendMessage("Не удалось привязать аккаунт, так как мне не удалось найти Вас на нашем Дискорд сервере");
+                form.sendMessage(RED + "Не удалось привязать аккаунт, так как мне не удалось найти Вас на нашем Дискорд сервере");
                 return;
             }
             /*
             Добавляю игрока в базу данных, сообщаю ему об успешной привязке, удаляю из списка незавершённых привязок
              */
             insertPlayer(target, sender);
-            form.sendMessage(String.format("Ваш аккаунт успешно привязан к Дискорду %s! Приятной игры", sender.getAsTag()));
+            form.sendMessage(String.format(GRAY + "Ваш аккаунт успешно привязан к Дискорду %s! Приятной игры", sender.getAsTag()));
             channel.sendMessageEmbeds(embedBuilder(sender, "Ваш Дискорд аккаунт был успешно привязан к " + targetName, CommandState.SUCCESS)).queue(null, ignored -> {});
             UNFINISHED.remove(player);
         });
@@ -431,7 +466,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
             По нажатии на кнопку все остальные кнопки станут недоступны, так как тоже содержат в себе эту строку.
              */
             if (!UNFINISHED.containsKey(player)) return;
-            form.sendMessage("Привязка аккаунта успешно отменена.");
+            form.sendMessage(GRAY + "Привязка аккаунта успешно отменена.");
             channel.sendMessageEmbeds(embedBuilder(sender, String.format("Запрос о привязке был успешно отклонён со стороны аккаунта %s", targetName), CommandState.SUCCESS))
                     .queue(null, ignored -> {});
             UNFINISHED.remove(player);
@@ -445,7 +480,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
              */
             if (!UNFINISHED.containsKey(player)) return;
             SPAM_MAP.add(new AbstractMap.SimpleEntry<>(sender.getId(), player.getUniqueId()));
-            form.sendMessage("Данный пользователь был добавлен в игнор. Он больше не сможет отправлять Вам запрос о привязке/отвязке");
+            form.sendMessage(GRAY + "Данный пользователь был добавлен в игнор. Он больше не сможет отправлять Вам запрос о привязке/отвязке");
             channel.sendMessageEmbeds(embedBuilder(sender,
                     "Ваши попытки привязки были обозначены спамом. Более Вы не сможете отправлять запрос о привязке на данный аккаунт", CommandState.SPAM))
                     .queue(null, ignored -> {});
@@ -456,7 +491,6 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
         return new TextComponent(accept, slash, cancel, slash, spam);
     }
 
-    // TODO: 26.07.2021 Закончить оформление метода
     /**
      * Метод, который вызывается командой !отвязать.
      * Данный метод возможен только при взаимодействии с ботом через личные сообщения пользователя
@@ -476,7 +510,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
         отдельными методами, которые прописаны в коде ниже.
          */
         if (args.length != 1) {
-            channel.sendMessageEmbeds(embedBuilder(sender, "Неверное количество аргументов. Синтаксис: `!отвязать`", CommandState.ERROR)).queue();
+            channel.sendMessageEmbeds(embedBuilder(sender, "Неверное количество аргументов.\nСинтаксис: `!отвязать`", CommandState.ERROR)).queue();
             return;
         }
         String playerName = getLinkedPlayerName(event.getAuthor());
@@ -508,13 +542,25 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
             return;
         }
 
+        // ВАЖНО! ЭТА ПРОВЕРКА ДОЛЖНА ИДТИ В ПОСЛЕДНЮЮ ОЧЕРЕДЬ ПЕРЕД ОТПРАВКОЙ!
+        /*
+        Если у участника уже есть кд - игнорируем.
+        Если кд не найден - присваиваем участнику кд.
+         */
+        if(isOnCooldown(event)) return;
+
         channel.sendMessageEmbeds(embedBuilder(sender,
-                "Запрос об отвязке был успешно отправлен владельцу аккаунта " + target.getDisplayName(), CommandState.ERROR))
+                "Запрос об отвязке был успешно отправлен владельцу аккаунта " + target.getDisplayName(), CommandState.SUCCESS))
                 .queue();
         target.spigot().sendMessage(unlinkComponents(target, event));
+
+        /*
+        Запускаю цикл, в котором жду действия от пользователя в течении определённого количества секунд
+        Если в течении этого времени он не реагирует на запрос - отклоняю его
+         */
+        requestExpire(sender, channel, target, EXPIRE_AFTER, false);
     }
 
-    // TODO: 26.07.2021 закончить оформление метода
     /**
      * Метод, позволяющий отправлять подтверждение об отвязке на сервер.
      * Сделал метод приватным, так как мы не будем вызывать его из вне.
@@ -532,12 +578,14 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
          */
         User sender = event.getAuthor();
         MessageChannel channel = event.getChannel();
+        UNFINISHED.put(target, sender.getId());
         /* Если target не null - создаю объект форматтера
         Крайне важная хуйня. Позволяет избавиться от лишнего текста и прочего.
         Очень рекомендую использовать, если отправляется сообщение только одному игроку
          */
         Formatter form = new Formatter(target);
-        UNFINISHED.put(target, sender.getId());
+        form.sendMessage(GRAY + "Вы действительно хотите отвязать свой аккаунт?" +
+                "\nВаши нынешние репутация и достижения останутся, тем не менее Вы больше не сможете пользоваться этим функционалом");
 
         TextComponent accept = new TextComponent("✔ Отвязать");
         TextComponent cancel = new TextComponent("⌀ Отмена");
@@ -556,7 +604,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
              */
             if (GUILD == null) {
                 UNFINISHED.remove(player);
-                form.sendMessage("Не удалось получить объект сервера. Свяжитесь с модераторами");
+                form.sendMessage(RED + "Не удалось получить ID гильдии. Сообщите модерации об этой проблеме");
                 return;
             }
 
@@ -566,7 +614,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
              */
             if (LINKED_ROLE == null) {
                 UNFINISHED.remove(player);
-                form.sendMessage("⌀ Ошибка. Подробности были отправлены Вам в ЛС Дискорда");
+                form.sendMessage(RED + "Не удалось завершить привязку. Подробности были отправлены в Дискорд");
                 channel.sendMessageEmbeds(embedBuilder(sender,
                         "Мне не удалось выдать Вам роль на нашем Дискорд сервере. Обратитесь к модерации.\n" +
                                 "Отвязка аккаунтов была отменена", CommandState.ERROR)).queue(null, ignored -> {});
@@ -586,26 +634,26 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
                 Member member = GUILD.retrieveMember(sender).complete();
                 if (member == null) {
                     UNFINISHED.remove(player);
-                    form.sendMessage("Мне не удалось найти Вас на нашем сервере");
+                    form.sendMessage(RED + "Мне не удалось найти Вас на нашем сервере");
                     return;
                 }
                 GUILD.removeRoleFromMember(member, LINKED_ROLE).queue();
             } catch (HierarchyException e) {
                 UNFINISHED.remove(player);
-                form.sendMessage("⌀ Ошибка. Подробности были отправлены Вам в ЛС Дискорда");
+                form.sendMessage(RED + "Не удалось завершить привязку. Подробности были отправлены в Дискорд");
                 channel.sendMessageEmbeds(embedBuilder(sender,
                         "У меня недостаточно прав для выдачи роли привязанного игрока.\nОбратитесь к модерации: " + e.getStackTrace()[0], CommandState.ERROR))
                         .queue(null, ignored -> {});
                 return;
             } catch (ErrorResponseException e) {
                 UNFINISHED.remove(player);
-                form.sendMessage("Не удалось отвязать аккаунт, так как мне не удалось найти Вас на нашем сервере");
+                form.sendMessage(RED + "Не удалось отвязать аккаунт, так как мне не удалось найти Вас на нашем Дискорд сервере");
                 return;
             }
 
             removePlayer(sender);
             channel.sendMessageEmbeds(embedBuilder(sender, "Ваш аккаунт был успешно отвязан. Жду не дождусь вновь его привязать!", CommandState.SUCCESS)).queue(null, ignored -> {});
-            form.sendMessage(String.format("&#bfbfbfДискорд аккаунт %s более не привязан к Вашему Майнкрафт аккаунту", sender.getAsTag()));
+            form.sendMessage(String.format(GRAY + "Дискорд %s был успешно отвязан от Вашего аккаунта", sender.getAsTag()));
             UNFINISHED.remove(player);
         });
         LinkComponentCallback.execute(cancel, player -> {
@@ -619,7 +667,7 @@ public class LinkingSystem extends ListenerAdapter implements Listener {
             channel.sendMessageEmbeds(embedBuilder(sender,
                     "Отвязка аккаунтов была успешно отклонена. Можно ведь и не отвязывать вовсе :slight_smile:", CommandState.SUCCESS))
                     .queue(null, ignored -> {});
-            form.sendMessage("&#dbdbdbОтвязка аккаунтов была успешно отменена");
+            form.sendMessage(GRAY + "Отвязка аккаунтов была успешно отменена");
             UNFINISHED.remove(player);
         });
 

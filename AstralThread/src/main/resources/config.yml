@@ -10,3 +10,5 @@ ColorPalette:
   red: '&#f21d1d'
   yellow: '&#ffd30f'
   gray: '&#bfbfbf'
+LinkingSystem:
+  expire_after_secs: 5
