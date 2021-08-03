@@ -1,0 +1,6 @@
+name: AstralReforged
+main: com.astralsmp.AstralReforged
+version: ${version}
+api-version: 1.17
+author: KatanaMajesty
+depend: [ProtocolLib]

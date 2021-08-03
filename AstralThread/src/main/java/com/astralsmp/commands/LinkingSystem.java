@@ -2,7 +2,7 @@ package com.astralsmp.commands;
 
 import com.astralsmp.AstralThread;
 import com.astralsmp.annotations.AstralCommand;
-import com.astralsmp.events.LinkComponentCallback;
+import com.astralsmp.custom.LinkComponentCallback;
 import com.astralsmp.exceptions.InitTableException;
 import com.astralsmp.modules.*;
 import com.astralsmp.modules.Formatter;

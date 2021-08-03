@@ -1,7 +1,7 @@
 package com.astralsmp;
 
 import com.astralsmp.commands.LinkingSystem;
-import com.astralsmp.events.LinkComponentCallback;
+import com.astralsmp.custom.LinkComponentCallback;
 import com.astralsmp.exceptions.InitTableException;
 import com.astralsmp.modules.Config;
 import com.astralsmp.modules.Discord;

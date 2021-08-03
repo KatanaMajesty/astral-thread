@@ -1,0 +1,37 @@
+plugins {
+    id 'application'
+}
+
+group 'com.astralsmp'
+version '1.0.0'
+
+compileJava.options.encoding('UTF-8')
+
+tasks.withType(JavaCompile) {
+    options.encoding('UTF-8')
+}
+
+processResources {
+    filesMatching('plugin.yml') {
+        expand(project.properties)
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'}
+    maven {url 'https://repo.dmulloy2.net/repository/public'}
+}
+
+dependencies {
+    implementation 'org.jetbrains:annotations:20.1.0'
+    testImplementation 'junit:junit:4.13.1'
+    implementation 'com.comphenix.protocol:ProtocolLib:4.7.0'
+    implementation 'org.spigotmc:spigot-api:1.17.1-R0.1-SNAPSHOT'
+    implementation 'org.spigotmc:spigot:1.17.1-R0.1-SNAPSHOT'
+}
+
+application {
+    mainClass = 'com.astralsmp.AstralReforged'
+}

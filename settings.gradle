@@ -9,5 +9,5 @@
 
 rootProject.name = 'astral-thread'
 include('AstralThread')
-include 'AstralAPI'
+include 'AstralReforged'
 

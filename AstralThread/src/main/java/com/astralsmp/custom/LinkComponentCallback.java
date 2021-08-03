@@ -1,4 +1,4 @@
-package com.astralsmp.events;
+package com.astralsmp.custom;
 
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
