@@ -46,4 +46,9 @@ public class Database {
         return dataSource.getConnection();
     }
 
+    public static void closeConnection() throws SQLException {
+        dataSource.getConnection().close();
+        dataSource.close();
+    }
+
 }

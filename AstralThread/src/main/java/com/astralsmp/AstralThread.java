@@ -4,12 +4,14 @@ import com.astralsmp.commands.LinkingSystem;
 import com.astralsmp.custom.LinkComponentCallback;
 import com.astralsmp.exceptions.InitTableException;
 import com.astralsmp.modules.Config;
+import com.astralsmp.modules.Database;
 import com.astralsmp.modules.Discord;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.logging.Logger;
 
 // TODO: 26.07.2021 закончить оформление класса
@@ -72,7 +74,11 @@ public class AstralThread extends JavaPlugin {
         Блок кода ниже для инициализации необходимой дресни, которая связанна
         с инициализацией таблиц в базе данных
          */
-        // some code
+        try {
+            Database.closeConnection();
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
 
         /*
         Блок кода ниже должен использоваться только для инициализации всякой дряни,
