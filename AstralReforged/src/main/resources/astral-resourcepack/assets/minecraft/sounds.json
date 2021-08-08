@@ -1,0 +1,23 @@
+{
+  "block.wood.break":{"replace":true,"sounds":[]},
+  "block.wood.fall":{"replace":true,"sounds":[]},
+  "block.wood.hit":{"replace":true,"sounds":[]},
+  "block.wood.place":{"replace":true,"sounds":[]},
+  "block.wood.step":{"replace":true,"sounds":[]},
+  "custom.block.wood.break":{
+    "sounds":["dig/wood1","dig/wood2","dig/wood3","dig/wood4"],
+    "subtitle":"subtitles.block.generic.break"
+  },
+  "custom.block.wood.fall":{
+    "sounds":["step/wood1","step/wood2","step/wood3","step/wood4","step/wood5","step/wood6"]
+  },
+  "custom.block.wood.hit":{
+    "sounds":["step/wood1","step/wood2","step/wood3","step/wood4","step/wood5","step/wood6"],
+    "subtitle":"subtitles.block.generic.hit"
+  },
+  "custom.block.wood.place":{
+    "sounds":["dig/wood1","dig/wood2","dig/wood3","dig/wood4"],
+    "subtitle":"subtitles.block.generic.place"
+  }
+}
+
