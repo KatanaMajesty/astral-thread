@@ -1,17 +1,25 @@
 package com.astralsmp.custom;
 
 import com.astralsmp.api.PacketAPI;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.EnumHand;
 import org.bukkit.Instrument;
 import org.bukkit.Material;
 import org.bukkit.Note;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.type.NoteBlock;
+import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class AstralBlock implements Listener {
 
@@ -37,7 +45,7 @@ public abstract class AstralBlock implements Listener {
     }
 
     private void closeBlockCreation() {
-        throw new NullPointerException(String.format("Field is Null at %s", getClass().getName()));
+        throw new NullPointerException(String.format("Field of BLOCK is Null at %s", getClass().getName()));
     }
 
     public void init() {
@@ -50,6 +58,8 @@ public abstract class AstralBlock implements Listener {
                 | walkSound == null
                 | fallSound == null) closeBlockCreation();
     }
+
+    public Plugin getPlugin() {return this.plugin;}
 
     public Instrument getInstrument() {
         return this.instrument;
@@ -111,11 +121,35 @@ public abstract class AstralBlock implements Listener {
         this.fallSound = fallSound;
     }
 
-    @EventHandler public void onAstralBlockPlace(PlayerInteractEvent e) {
+    @EventHandler public void onAstralBlockBreak(@NotNull BlockBreakEvent e) {
+        if (e.getBlock().getType() == Material.NOTE_BLOCK) {
+            Block b = e.getBlock();
+            NoteBlock nb = (NoteBlock) e.getBlock().getBlockData();
+            if (nb.getInstrument() != instrument && nb.getNote() != note) return;
+            e.setDropItems(false);
+            World w = b.getLocation().getWorld();
+            assert w != null;
+            w.dropItemNaturally(b.getLocation(), dropItem.getItem());
+        }
+    }
+
+    @EventHandler public void onAstralBlockPlace(@NotNull PlayerInteractEvent e) {
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK || e.getHand() != EquipmentSlot.HAND) return;
         Player p = e.getPlayer();
         ItemStack main = p.getInventory().getItemInMainHand();
         ItemStack off = p.getInventory().getItemInOffHand();
+        NBTTagCompound nmsMain = CraftItemStack.asNMSCopy(main).getTag();
+        NBTTagCompound nmsOff = CraftItemStack.asNMSCopy(off).getTag();
+        EnumHand hand;
+        ItemStack item;
+        if (nmsMain != null && nmsMain.getCompound(AstralItem.CLASS_ID).equals(dropItem.getNbtTagCompound())) {
+            hand = EnumHand.a;
+            item = main;
+        } else if (nmsOff != null && nmsOff.getCompound(AstralItem.CLASS_ID).equals(dropItem.getNbtTagCompound())
+                && !(main.getType().isBlock() && !main.getType().isAir())) {
+            hand = EnumHand.b;
+            item = off;
+        } else return;
     }
 
 }

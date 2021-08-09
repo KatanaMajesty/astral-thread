@@ -1,17 +1,15 @@
 package com.astralsmp;
 
-import com.astralsmp.api.PacketAPI;
 import com.astralsmp.custom.blocks.RubyBlock;
 import com.astralsmp.modules.BlockRelated;
 import com.astralsmp.modules.WoodRestore;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import org.bukkit.Bukkit;
-import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 
-public class AstralReforged extends JavaPlugin implements Listener {
+public class AstralReforged extends JavaPlugin {
 
     public static ProtocolManager protocolManager = null;
 

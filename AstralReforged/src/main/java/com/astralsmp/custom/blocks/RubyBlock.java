@@ -25,7 +25,7 @@ public class RubyBlock extends AstralBlock {
         setDropItem(new Ruby()) создаёт каждый сломанный блок новый объект кастомного предмета
         Пересмотреть эту функцию и попробовать оптимизировать, так как это может вызывать нагрузку
          */
-        setDropItem(new Ruby());
+        setDropItem(new Ruby(getPlugin()));
         setDropCount(1);
         setPlaceSound("block.amethyst_block.place");
         setBreakSound("block.amethyst_block.break");
