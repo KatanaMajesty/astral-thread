@@ -1,5 +1,6 @@
-package com.astralsmp;
+package com.astralsmp.modules;
 
+import com.astralsmp.AstralReforged;
 import com.astralsmp.modules.BlockRelated;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolManager;

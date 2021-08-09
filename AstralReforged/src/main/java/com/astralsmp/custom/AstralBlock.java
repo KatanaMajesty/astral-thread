@@ -1,21 +1,23 @@
 package com.astralsmp.custom;
 
-import net.minecraft.network.protocol.game.PacketPlayOutEntityEffect;
-import net.minecraft.network.protocol.game.PacketPlayOutRemoveEntityEffect;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectList;
+import com.astralsmp.api.PacketAPI;
 import org.bukkit.Instrument;
 import org.bukkit.Material;
 import org.bukkit.Note;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 public abstract class AstralBlock implements Listener {
 
+    private final PacketAPI api = new PacketAPI();
+
+    private static final String CLASS_ID = "astral_block";
     private Plugin plugin;
     private Instrument instrument;
     private Note note;
@@ -109,44 +111,11 @@ public abstract class AstralBlock implements Listener {
         this.fallSound = fallSound;
     }
 
-    /*
-    Возможно, более целесообразно выдавать эффект усталости при входе на сервер. Таким образом, я могу избавиться от лишних
-    передач пакетов между сервером и клиентом, в дальнейшем оптимизируя нагрузку плагина на последние.
-     */
-
-    /**
-     * Данный метод позволяет отправлять пакет с эффектом усталости на сервер.
-     * Я использую это в новой системе ломания блоков. Есть некоторые минусы данной системы.
-     * К примеру, древние стражи более не могут накладывать немоту на игрока. Может быть, в будущем я попытаюсь это решить.
-     * Усталость длится **.** и выдаётся -1 уровня - таким образом я не меняю визуальный эффект ломания блока, тем не менее
-     * попытки сломать его четны.
-     *
-     * @param player Игрок, которому будет отправлен эффект усталости
-     */
-    public void fatiguePacketSend(Player player) {
-        PacketPlayOutEntityEffect packetPlayOutEntityEffect = new PacketPlayOutEntityEffect(
-                player.getEntityId(),
-                new MobEffect(MobEffectList.fromId(4),
-                        32768,
-                        -1, false, false));
-        ((CraftPlayer) player).getHandle().b.sendPacket(packetPlayOutEntityEffect);
-    }
-
-    /**
-     * Этот метод позволяет снять пакет с эффектом усталости с игрока.
-     * Негативного эффекта не будет, если снимать нечего
-     *
-     * @param player Игрок, которому нужно снять эффект усталости
-     */
-    private void fatiguePacketRemove(Player player) {
-        PacketPlayOutRemoveEntityEffect packet = new PacketPlayOutRemoveEntityEffect(
-                player.getEntityId(),
-                MobEffectList.fromId(4));
-        ((CraftPlayer) player).getHandle().b.sendPacket(packet);
-    }
-
     @EventHandler public void onAstralBlockPlace(PlayerInteractEvent e) {
-
+        if (e.getAction() != Action.RIGHT_CLICK_BLOCK || e.getHand() != EquipmentSlot.HAND) return;
+        Player p = e.getPlayer();
+        ItemStack main = p.getInventory().getItemInMainHand();
+        ItemStack off = p.getInventory().getItemInOffHand();
     }
 
 }
