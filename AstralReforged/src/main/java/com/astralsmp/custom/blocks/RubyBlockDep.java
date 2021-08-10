@@ -59,7 +59,7 @@ public class RubyBlockDep implements Listener {
     private final int breakTime;
     private final Map<UUID, Location> B_BROKE = new HashMap<>();
     private final Map<UUID, BoundingBox> _bFrame = new HashMap<>();
-    private static final ProtocolManager protocolManager = AstralReforged.protocolManager;
+//    private static final ProtocolManager protocolManager = AstralReforged.protocolManager;
     private NBTTagCompound blockNbtTagCompound = null;
 
     private final String _blockName;
@@ -75,82 +75,82 @@ public class RubyBlockDep implements Listener {
         // INIT
         this.plugin = plugin;
         setRubyOre();
-        protocolManager.addPacketListener(new PacketAdapter(plugin, ListenerPriority.NORMAL,
-                PacketType.Play.Server.NAMED_SOUND_EFFECT,
-                PacketType.Play.Server.BLOCK_ACTION,
-                PacketType.Play.Client.BLOCK_DIG) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-                if (event.getPacketType() == PacketType.Play.Server.NAMED_SOUND_EFFECT
-                        && event.getPacket().getSoundEffects().read(0) == Sound.BLOCK_NOTE_BLOCK_BANJO)
-                    event.setCancelled(true);
-                if (event.getPacketType() == PacketType.Play.Server.BLOCK_ACTION
-                        && event.getPacket().getBlocks().read(0) == Material.NOTE_BLOCK) {
-                    event.setCancelled(true);
-                }
-            }
-            @Override
-            public void onPacketReceiving(PacketEvent event) {
-                if (event.getPacketType() == PacketType.Play.Client.BLOCK_DIG) {
-                    Player player = event.getPlayer();
-                    if (player.getGameMode() == GameMode.CREATIVE) return;
-                    BlockPosition block = event.getPacket().getBlockPositionModifier().read(0);
-                    Location loc = block.toLocation(player.getWorld());
-                    Block posBlock = loc.getBlock();
-                    if (posBlock.getType() != Material.NOTE_BLOCK && posBlock.getMetadata("ruby_ore").isEmpty())
-                        return;
-
-                    UUID uuid = player.getUniqueId();
-                    EnumWrappers.PlayerDigType digEnum = event.getPacket().getPlayerDigTypes().read(0);
-                    if (digEnum == EnumWrappers.PlayerDigType.START_DESTROY_BLOCK) {
-                        fatigueApply(player);
-                        B_BROKE.put(uuid, loc);
-                    }
-                    if (digEnum == EnumWrappers.PlayerDigType.ABORT_DESTROY_BLOCK
-                            || digEnum == EnumWrappers.PlayerDigType.STOP_DESTROY_BLOCK) {
-                        blockBreakAnimPacket(posBlock, -1);
-                        fatigueRemove(player);
-                        B_BROKE.remove(uuid);
-                        return;
-                    }
-
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                while (B_BROKE.containsKey(uuid)) {
-                                    if (B_BROKE.get(uuid) != loc) break;
-                                    blockBreakProcPacket(loc, player);
-                                    Thread.sleep(240);
-                                }
-                            } catch (InvocationTargetException | InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            this.cancel();
-                        }
-                    }.runTaskAsynchronously(plugin);
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            long cycleTime = TimeUnit.SECONDS.toMillis(breakTime / 10);
-                            int i = 0;
-                            try {
-                                while (B_BROKE.containsKey(uuid) || i < 10) {
-                                    if (B_BROKE.get(uuid) != loc) break;
-                                    blockBreakAnimPacket(posBlock, i);
-                                    Thread.sleep(cycleTime);
-                                    i++;
-                                    if (i == 9) destroyBlock(player, posBlock);
-                                }
-                                this.cancel();
-                            } catch (InterruptedException | ExecutionException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }.runTaskAsynchronously(plugin);
-                }
-            }
-        });
+//        protocolManager.addPacketListener(new PacketAdapter(plugin, ListenerPriority.NORMAL,
+//                PacketType.Play.Server.NAMED_SOUND_EFFECT,
+//                PacketType.Play.Server.BLOCK_ACTION,
+//                PacketType.Play.Client.BLOCK_DIG) {
+//            @Override
+//            public void onPacketSending(PacketEvent event) {
+//                if (event.getPacketType() == PacketType.Play.Server.NAMED_SOUND_EFFECT
+//                        && event.getPacket().getSoundEffects().read(0) == Sound.BLOCK_NOTE_BLOCK_BANJO)
+//                    event.setCancelled(true);
+//                if (event.getPacketType() == PacketType.Play.Server.BLOCK_ACTION
+//                        && event.getPacket().getBlocks().read(0) == Material.NOTE_BLOCK) {
+//                    event.setCancelled(true);
+//                }
+//            }
+//            @Override
+//            public void onPacketReceiving(PacketEvent event) {
+//                if (event.getPacketType() == PacketType.Play.Client.BLOCK_DIG) {
+//                    Player player = event.getPlayer();
+//                    if (player.getGameMode() == GameMode.CREATIVE) return;
+//                    BlockPosition block = event.getPacket().getBlockPositionModifier().read(0);
+//                    Location loc = block.toLocation(player.getWorld());
+//                    Block posBlock = loc.getBlock();
+//                    if (posBlock.getType() != Material.NOTE_BLOCK && posBlock.getMetadata("ruby_ore").isEmpty())
+//                        return;
+//
+//                    UUID uuid = player.getUniqueId();
+//                    EnumWrappers.PlayerDigType digEnum = event.getPacket().getPlayerDigTypes().read(0);
+//                    if (digEnum == EnumWrappers.PlayerDigType.START_DESTROY_BLOCK) {
+//                        fatigueApply(player);
+//                        B_BROKE.put(uuid, loc);
+//                    }
+//                    if (digEnum == EnumWrappers.PlayerDigType.ABORT_DESTROY_BLOCK
+//                            || digEnum == EnumWrappers.PlayerDigType.STOP_DESTROY_BLOCK) {
+//                        blockBreakAnimPacket(posBlock, -1);
+//                        fatigueRemove(player);
+//                        B_BROKE.remove(uuid);
+//                        return;
+//                    }
+//
+//                    new BukkitRunnable() {
+//                        @Override
+//                        public void run() {
+//                            try {
+//                                while (B_BROKE.containsKey(uuid)) {
+//                                    if (B_BROKE.get(uuid) != loc) break;
+//                                    blockBreakProcPacket(loc, player);
+//                                    Thread.sleep(240);
+//                                }
+//                            } catch (InvocationTargetException | InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                            this.cancel();
+//                        }
+//                    }.runTaskAsynchronously(plugin);
+//                    new BukkitRunnable() {
+//                        @Override
+//                        public void run() {
+//                            long cycleTime = TimeUnit.SECONDS.toMillis(breakTime / 10);
+//                            int i = 0;
+//                            try {
+//                                while (B_BROKE.containsKey(uuid) || i < 10) {
+//                                    if (B_BROKE.get(uuid) != loc) break;
+//                                    blockBreakAnimPacket(posBlock, i);
+//                                    Thread.sleep(cycleTime);
+//                                    i++;
+//                                    if (i == 9) destroyBlock(player, posBlock);
+//                                }
+//                                this.cancel();
+//                            } catch (InterruptedException | ExecutionException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    }.runTaskAsynchronously(plugin);
+//                }
+//            }
+//        });
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -245,10 +245,10 @@ public class RubyBlockDep implements Listener {
             case a -> 0;
             case b -> 3;
         };
-        PacketContainer anim = protocolManager.createPacket(PacketType.Play.Server.ANIMATION, false);
-        anim.getEntityModifier(player.getWorld()).write(0, player);
-        anim.getIntegers().write(1, handInd);
-        protocolManager.sendServerPacket(player, anim);
+//        PacketContainer anim = protocolManager.createPacket(PacketType.Play.Server.ANIMATION, false);
+//        anim.getEntityModifier(player.getWorld()).write(0, player);
+//        anim.getIntegers().write(1, handInd);
+//        protocolManager.sendServerPacket(player, anim);
 
         PacketPlayOutCustomSoundEffect cSouEff = new PacketPlayOutCustomSoundEffect(
                 new MinecraftKey("block.amethyst_block.place"),

@@ -1,9 +1,10 @@
 {
-  "parent": "item/handheld",
-  "textures": {
-    "layer0": "item/phantom_membrane"
-  },
-  "overrides": [
-    {"predicate": {"custom_model_data": 9533}, "model": "custom/custom_items/ruby_ore"}
-  ]
-}
+	"parent": "item/generated",
+	"textures": {
+	  "layer0": "item/phantom_membrane"
+	},
+	"overrides": [
+	  {"predicate": {"custom_model_data":9500}, "model": "custom/custom_items/ruby"},
+	  {"predicate": {"custom_model_data":9501}, "model": "custom/custom_items/ruby_ore"}
+	]
+  }

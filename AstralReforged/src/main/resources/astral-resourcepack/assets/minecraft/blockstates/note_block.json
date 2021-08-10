@@ -1,6 +1,6 @@
 {
   "variants": {
-    "instrument=banjo,note=2,powered=false": {
+    "instrument=banjo,note=1,powered=false": {
       "model": "minecraft:block/block_banjo/ruby_ore"
     }
   }

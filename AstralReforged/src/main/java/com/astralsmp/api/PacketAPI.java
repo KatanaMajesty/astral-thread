@@ -5,6 +5,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.resources.MinecraftKey;
 import net.minecraft.sounds.SoundCategory;
+import net.minecraft.sounds.SoundEffect;
 import net.minecraft.world.EnumHand;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectList;
@@ -93,6 +94,14 @@ public class PacketAPI {
                 1F, 0.75F);
     }
 
+    public static PacketPlayOutCustomSoundEffect blockPlaceSoundPacket(SoundEffect soundEffect, Block block) {
+        return new PacketPlayOutCustomSoundEffect(
+                soundEffect.a(),
+                SoundCategory.d,
+                new Vec3D(block.getX(), block.getY(), block.getZ()),
+                1F, 0.75F);
+    }
+
     // blockFallSoundPacket?
 
     public static PacketPlayOutAnimation handSwingAnimationPacket(EnumHand enumHand, Player player) {
@@ -105,11 +114,11 @@ public class PacketAPI {
                 handInd);
     }
 
-    private static int getBlockEntityId(Block block) {
+    public static int getBlockEntityId(Block block) {
         return ((block.getX() & 0xFFF) << 20 | (block.getZ() & 0xFFF) << 8) | (block.getY() & 0xFF);
     }
 
-    private static BlockPosition getBlockPosition(Block block) {
+    public static BlockPosition getBlockPosition(Block block) {
         return new BlockPosition(block.getX(), block.getY(), block.getZ());
     }
 
