@@ -4,6 +4,7 @@ import com.astralsmp.api.PacketAPI;
 import com.astralsmp.modules.BlockRelated;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagEnd;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.world.EnumHand;
 import org.bukkit.GameMode;
@@ -36,6 +37,7 @@ public abstract class AstralItem implements Listener {
     private static PacketAPI api = new PacketAPI();
 
     static final String CLASS_ID = "astral_item";
+    static final String CLASS_ID_B = "astral_placeable_item";
     private final Plugin plugin;
     private String itemName;
     private String nmsName;
@@ -155,6 +157,7 @@ public abstract class AstralItem implements Listener {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
         nbtTagCompound = nmsItem.getTag() != null ? nmsItem.getTag() : new NBTTagCompound();
         nbtTagCompound.set(CLASS_ID, NBTTagString.a(nmsName));
+        if (placeable) nbtTagCompound.set(CLASS_ID_B, NBTTagString.a("placeable"));
         nmsItem.setTag(nbtTagCompound);
         item = CraftItemStack.asBukkitCopy(nmsItem);
     }
@@ -170,7 +173,8 @@ public abstract class AstralItem implements Listener {
             hand = EnumHand.a;
             item = main;
         } else if (isCorrectItem(off)
-                && e.getClickedBlock().getType() != Material.NOTE_BLOCK && !(main.getItemMeta().getCustomModelData() > 9499)) {
+                && e.getClickedBlock().getType() != Material.NOTE_BLOCK
+                    && !isPlaceableCustom(main)) {
             hand = EnumHand.b;
             item = off;
         } else return;
@@ -232,5 +236,13 @@ public abstract class AstralItem implements Listener {
         NBTTagCompound nmsTag = nmsItem.getTag();
         if (nmsTag.get(CLASS_ID) == null) return false;
         return nmsTag.get(CLASS_ID).asString().equals(nmsName);
+    }
+
+    private static boolean isPlaceableCustom(ItemStack item) {
+        net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+        NBTTagCompound t = nmsItem.getTag();
+        return t != null
+                && t.hasKey(CLASS_ID_B)
+                && t.get(CLASS_ID_B).asString().equals("placeable");
     }
 }
