@@ -77,7 +77,7 @@ public class PacketAPI {
         return new PacketPlayOutCustomSoundEffect(
                 new MinecraftKey(sound),
                 SoundCategory.d,
-                new Vec3D(block.getX(), block.getY(), block.getZ()),
+                new Vec3D(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5),
                 0.15F, 1F);
     }
 
@@ -85,7 +85,7 @@ public class PacketAPI {
         return new PacketPlayOutCustomSoundEffect(
                 new MinecraftKey(sound),
                 SoundCategory.d,
-                new Vec3D(block.getX(), block.getY(), block.getZ()),
+                new Vec3D(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5),
                 0.5F, 0.75F);
     }
 
@@ -93,7 +93,7 @@ public class PacketAPI {
         return new PacketPlayOutCustomSoundEffect(
                 new MinecraftKey(sound),
                 SoundCategory.d,
-                new Vec3D(block.getX(), block.getY(), block.getZ()),
+                new Vec3D(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5),
                 0.15F, 1F);
     }
 
@@ -101,7 +101,7 @@ public class PacketAPI {
         return new PacketPlayOutCustomSoundEffect(
                 new MinecraftKey(sound),
                 SoundCategory.d,
-                new Vec3D(block.getX(), block.getY(), block.getZ()),
+                new Vec3D(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5),
                 1F, 0.75F);
     }
 
@@ -109,7 +109,7 @@ public class PacketAPI {
         return new PacketPlayOutCustomSoundEffect(
                 soundEffect.a(),
                 SoundCategory.d,
-                new Vec3D(block.getX(), block.getY(), block.getZ()),
+                new Vec3D(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5),
                 1F, 0.75F);
     }
 
