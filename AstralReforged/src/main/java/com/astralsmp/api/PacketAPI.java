@@ -1,6 +1,11 @@
 package com.astralsmp.api;
 
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPosition;
+import net.minecraft.core.EnumDirection;
+import net.minecraft.core.particles.Particle;
+import net.minecraft.core.particles.ParticleParamBlock;
+import net.minecraft.core.particles.Particles;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.resources.MinecraftKey;
@@ -11,7 +16,9 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectList;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3D;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.v1_17_R1.block.CraftBlock;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
@@ -19,6 +26,10 @@ public class PacketAPI {
 
     public void sendPacket(Packet<PacketListenerPlayOut> packet, Player player) {
         ((CraftPlayer) player).getHandle().b.sendPacket(packet);
+    }
+
+    public void receiveDigPacket(PacketPlayInBlockDig packet, Player player) {
+        ((CraftPlayer) player).getHandle().b.a(packet);
     }
 
         /*
@@ -67,7 +78,7 @@ public class PacketAPI {
                 new MinecraftKey(sound),
                 SoundCategory.d,
                 new Vec3D(block.getX(), block.getY(), block.getZ()),
-                0.25F, 0.4F);
+                0.15F, 1F);
     }
 
     public static PacketPlayOutCustomSoundEffect blockBreakSoundPacket(String sound, Block block) {
@@ -75,7 +86,7 @@ public class PacketAPI {
                 new MinecraftKey(sound),
                 SoundCategory.d,
                 new Vec3D(block.getX(), block.getY(), block.getZ()),
-                1F, 0.75F);
+                0.5F, 0.75F);
     }
 
     public static PacketPlayOutCustomSoundEffect blockWalkSoundPacket(String sound, Block block) {
@@ -110,8 +121,13 @@ public class PacketAPI {
             case b -> 3;
         };
         return new PacketPlayOutAnimation(
-                (Entity) player,
+                ((CraftPlayer) player).getHandle(),
                 handInd);
+    }
+
+    public static PacketPlayInBlockDig blockDigProcessPacket(PacketPlayInBlockDig.EnumPlayerDigType enumeration, Block b) {
+        BlockPosition bp = ((CraftBlock) b).getPosition();
+        return new PacketPlayInBlockDig(enumeration, bp, EnumDirection.a);
     }
 
     public static int getBlockEntityId(Block block) {

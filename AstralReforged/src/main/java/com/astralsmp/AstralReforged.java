@@ -1,5 +1,6 @@
 package com.astralsmp;
 
+import com.astralsmp.custom.blocks.EumusBlock;
 import com.astralsmp.custom.blocks.RubyBlock;
 import com.astralsmp.modules.BlockRelated;
 import com.astralsmp.modules.WoodRestore;
@@ -20,6 +21,7 @@ public class AstralReforged extends JavaPlugin {
         BlockRelated.initWoodenArray();
 
         getServer().getPluginManager().registerEvents(new RubyBlock(this), this);
+        getServer().getPluginManager().registerEvents(new EumusBlock(this), this);
         getServer().getPluginManager().registerEvents(new WoodRestore(this), this);
 
         getLogger().info("Плагин включён");

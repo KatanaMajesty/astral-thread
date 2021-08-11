@@ -19,11 +19,12 @@ public class RubyBlock extends AstralBlock {
         setInstrument(Instrument.BANJO);
         setNote(new Note(1));
         setMaterial(Material.IRON_PICKAXE);
-        setBreakTime(22.5);
+        setHardness(3);
         /*
         setDropItem(new Ruby()) создаёт каждый сломанный блок новый объект кастомного предмета
         Пересмотреть эту функцию и попробовать оптимизировать, так как это может вызывать нагрузку
          */
+        setFortunable(true);
         setSilkTouchable(true);
         setSilkDropItem(new RubyOre(getPlugin()));
         setSilkDropCount(1);
@@ -31,11 +32,9 @@ public class RubyBlock extends AstralBlock {
         setDropCount(5);
         setDefDropItem(null);
         setDefDropCount(0);
-        setPlaceSound("block.amethyst_block.place");
-        setBreakSound("block.amethyst_block.break");
-        setHitSound("block.amethyst_block.hit");
-        setWalkSound("block.amethyst_block.walk");
-        setFallSound("block.amethyst_block.fall");
-        super.init();
+        setBreakSound("block.stone.break");
+        setHitSound("block.stone.hit");
+        setWalkSound("block.stone.step");
+        setFallSound("block.stone.fall");
     }
 }

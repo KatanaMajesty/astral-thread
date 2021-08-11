@@ -2,6 +2,9 @@
   "variants": {
     "instrument=banjo,note=1,powered=false": {
       "model": "minecraft:block/block_banjo/ruby_ore"
+    },
+    "instrument=banjo,note=2,powered=false": {
+      "model": "minecraft:block/block_banjo/eumus"
     }
   }
 }

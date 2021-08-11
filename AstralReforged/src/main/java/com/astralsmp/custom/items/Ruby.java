@@ -16,7 +16,6 @@ public class Ruby extends AstralItem {
         setNmsName("ruby");
         setPlaceable(false);
         setLore(null);
-        super.init();
     }
 
 }

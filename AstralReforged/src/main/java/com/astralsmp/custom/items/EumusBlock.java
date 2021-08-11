@@ -5,21 +5,20 @@ import org.bukkit.Instrument;
 import org.bukkit.Note;
 import org.bukkit.plugin.Plugin;
 
-public class RubyOre extends AstralItem {
-
-    public RubyOre(Plugin plugin) {
+public class EumusBlock extends AstralItem {
+    public EumusBlock(Plugin plugin) {
         super(plugin);
     }
 
     @Override
     public void init() {
         setInstrument(Instrument.BANJO);
-        setNote(new Note(1));
+        setNote(new Note(2));
         setPlaceable(true);
-        setPlaceSound("block.stone.place");
-        setItemName("Рубиновая руда");
-        setCustomModelDataID(9501);
-        setNmsName("ruby_ore");
+        setNmsName("eumus");
+        setItemName("Почва Края");
+        setPlaceSound("block.dripstone_block.place");
         setLore(null);
+        setCustomModelDataID(9502);
     }
 }
