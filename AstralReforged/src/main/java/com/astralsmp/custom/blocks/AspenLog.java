@@ -16,9 +16,26 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.UUID;
 
-public class EumusBlock extends AstralBlock {
-    public EumusBlock(Plugin plugin) {
+public class AspenLog extends AstralBlock {
+    public AspenLog(Plugin plugin) {
         super(plugin);
+    }
+
+    @Override
+    public void init() {
+        com.astralsmp.custom.items.AspenLog aspenLog = new com.astralsmp.custom.items.AspenLog(getPlugin());
+        setDefDropItem(aspenLog);
+        setDefDropCount(1);
+        setDropItem(aspenLog);
+        setDropCount(1);
+        setMaterial(Material.WOODEN_AXE);
+        setHardness(2);
+        setInstrument(Instrument.BANJO);
+        setNote(new Note(3));
+        setBreakSound("custom.block.wood.break");
+        setFallSound("custom.block.wood.hit");
+        setHitSound("custom.block.wood.hit");
+        setWalkSound("custom.block.wood.step");
     }
 
     @Override
@@ -36,7 +53,6 @@ public class EumusBlock extends AstralBlock {
                         && event.getPacket().getBlocks().read(0) == Material.NOTE_BLOCK)
                     event.setCancelled(true);
             }
-
             @Override
             public void onPacketReceiving(PacketEvent event) {
                 if (event.getPacketType() == PacketType.Play.Client.BLOCK_DIG) {
@@ -73,21 +89,5 @@ public class EumusBlock extends AstralBlock {
                 }
             }
         });
-    }
-
-    @Override
-    public void init() {
-        setInstrument(Instrument.BANJO);
-        setNote(new Note(2));
-        setFortunable(false);
-        setHardness(1.5);
-        setDefDropItem(null);
-        setDropItem(new com.astralsmp.custom.items.EumusBlock(getPlugin()));
-        setDropCount(1);
-        setMaterial(Material.STONE_SHOVEL);
-        setBreakSound("block.dripstone_block.break");
-        setWalkSound("block.dripstone_block.step");
-        setFallSound("block.dripstone_block.hit");
-        setHitSound("block.dripstone_block.hit");
     }
 }

@@ -1,9 +1,10 @@
 {
-	"credit": "Для Astral SMP",
+	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"textures": {
-		"0": "custom/custom_items/ruby_ore",
-		"particle": "custom/custom_items/ruby_ore"
+		"0": "custom/custom_items/aspen_log",
+		"1": "custom/custom_items/aspen_log_top",
+		"particle": "custom/custom_items/aspen_log"
 	},
 	"elements": [
 		{
@@ -14,8 +15,8 @@
 				"east": {"uv": [0, 0, 16, 16], "texture": "#0", "cullface": "east"},
 				"south": {"uv": [0, 0, 16, 16], "texture": "#0", "cullface": "south"},
 				"west": {"uv": [0, 0, 16, 16], "texture": "#0", "cullface": "west"},
-				"up": {"uv": [0, 0, 16, 16], "texture": "#0", "cullface": "up"},
-				"down": {"uv": [0, 0, 16, 16], "texture": "#0", "cullface": "down"}
+				"up": {"uv": [0, 0, 16, 16], "texture": "#1", "cullface": "up"},
+				"down": {"uv": [0, 0, 16, 16], "texture": "#1", "cullface": "down"}
 			}
 		}
 	],

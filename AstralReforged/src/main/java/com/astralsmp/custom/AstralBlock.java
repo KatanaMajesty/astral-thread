@@ -46,10 +46,10 @@ import java.util.*;
 
 public abstract class AstralBlock implements Listener {
 
-    private static final ProtocolManager protocol = AstralReforged.protocolManager;
-    private static final PacketAPI api = new PacketAPI();
+    protected static final ProtocolManager protocol = AstralReforged.protocolManager;
+    protected static final PacketAPI api = new PacketAPI();
     private static final Map<UUID, BoundingBox> moveBox = new HashMap<>();
-    private static final Map<UUID, BlockPosition> breakMap = new HashMap<>();
+    public static final Map<UUID, BlockPosition> breakMap = new HashMap<>();
 
     static final String CLASS_ID = "astral_block";
     private final Plugin plugin;
@@ -85,9 +85,18 @@ public abstract class AstralBlock implements Listener {
                 | walkSound == null
                 | fallSound == null
                 | dropCount == null) closeBlockCreation();
+        packetListener();
         plugin.getServer().getPluginManager().registerEvents(dropItem, plugin);
         if (silkDropItem != null) plugin.getServer().getPluginManager().registerEvents(silkDropItem, plugin);
         if (defDropItem != null) plugin.getServer().getPluginManager().registerEvents(defDropItem, plugin);
+
+    }
+
+    private void closeBlockCreation() {
+        throw new NullPointerException(String.format("Field of BLOCK is Null at %s", getClass().getName()));
+    }
+
+    public static void packetListener() {
         protocol.addPacketListener(new PacketAdapter(getPlugin(), ListenerPriority.NORMAL,
                 PacketType.Play.Server.NAMED_SOUND_EFFECT,
                 PacketType.Play.Server.BLOCK_ACTION,
@@ -104,6 +113,7 @@ public abstract class AstralBlock implements Listener {
             @Override
             public void onPacketReceiving(PacketEvent event) {
                 if (event.getPacketType() == PacketType.Play.Client.BLOCK_DIG) {
+                    System.out.println(1);
                     Player p = event.getPlayer();
                     if (p.getGameMode() == GameMode.CREATIVE) return;
                     BlockPosition blockPosition = event.getPacket().getBlockPositionModifier().read(0);
@@ -121,14 +131,14 @@ public abstract class AstralBlock implements Listener {
                             return null;
                         });
                         api.sendPacket(PacketAPI.fatigueRemovePacket(p), p);
-                        breakMap.remove(uuid);
+                        AstralBlock.breakMap.remove(uuid);
                         return;
                     }
                     if (posBlock.getType() != Material.NOTE_BLOCK || isIncorrectBlock(posBlock))
                         return;
                     if (digEnum == EnumWrappers.PlayerDigType.START_DESTROY_BLOCK) {
                         event.setCancelled(true);
-                        breakMap.put(uuid, blockPosition);
+                        AstralBlock.breakMap.put(uuid, blockPosition);
                         api.sendPacket(PacketAPI.fatigueApplyPacket(p), p);
                     }
                     breakSoundThread(blockPosition, posBlock, p, uuid).runTaskAsynchronously(plugin);
@@ -136,10 +146,6 @@ public abstract class AstralBlock implements Listener {
                 }
             }
         });
-    }
-
-    private void closeBlockCreation() {
-        throw new NullPointerException(String.format("Field of BLOCK is Null at %s", getClass().getName()));
     }
 
     public abstract void init();
@@ -215,7 +221,7 @@ public abstract class AstralBlock implements Listener {
         return defDropItem;
     }
 
-    public void setDefDropItem(AstralItem defDropItem) {
+    public void setDefDropItem(@org.jetbrains.annotations.Nullable AstralItem defDropItem) {
         this.defDropItem = defDropItem;
     }
 
@@ -291,11 +297,7 @@ public abstract class AstralBlock implements Listener {
             Block b = e.getBlock();
             if (isIncorrectBlock(b)) return;
             e.setDropItems(false);
-            for (Entity p : b.getWorld().getNearbyEntities(b.getLocation(),
-                    16, 16, 16,
-                    entity -> entity instanceof Player)) {
-                api.sendPacket(PacketAPI.blockBreakSoundPacket(breakSound, b), (Player) p);
-            }
+            runOnNearbyPlayers(b, 16, 16, 16, player -> api.sendPacket(PacketAPI.blockBreakSoundPacket(breakSound, b), player));
             if (e.getPlayer().getGameMode() != GameMode.CREATIVE) getCorrectDrop(e.getPlayer(), b);
         }
     }
@@ -381,14 +383,13 @@ public abstract class AstralBlock implements Listener {
 
     private static boolean containsEntity(Block block) {
         if (!isUnPlaceableLoc(block))
-            if (!block.getLocation().getWorld().getNearbyEntities(
-                    block.getLocation().add(0.5, 0.5, 0.5), 0.5, 0, 0.5).isEmpty())
-                return true;
+            return !block.getLocation().getWorld().getNearbyEntities(
+                    block.getLocation().add(0.5, 0.5, 0.5), 0.5, 0, 0.5).isEmpty();
         return false;
     }
 
     // Переделать
-    private boolean isIncorrectBlock(@NotNull Block b) {
+    public boolean isIncorrectBlock(@NotNull Block b) {
         if (b.getType() != Material.NOTE_BLOCK)
 //                || (!b.getMetadata(AstralItem.CLASS_ID).get(0).asString().equals(dropItem.getNmsName())
 //                && !(defDropItem != null && b.getMetadata(AstralItem.CLASS_ID).get(0).asString().equals(defDropItem.getNmsName()))
@@ -546,7 +547,7 @@ public abstract class AstralBlock implements Listener {
         return ticks / 20;
     }
 
-    private BukkitRunnable breakSoundThread(BlockPosition blockPosition, Block posBlock, Player p, UUID uuid) {
+    public BukkitRunnable breakSoundThread(BlockPosition blockPosition, Block posBlock, Player p, UUID uuid) {
         return new BukkitRunnable() {
             @Override
             public void run() {
@@ -565,7 +566,7 @@ public abstract class AstralBlock implements Listener {
         };
     }
 
-    private BukkitRunnable breakAnimationThread(Player p, UUID uuid, BlockPosition blockPosition, Block posBlock) {
+    public BukkitRunnable breakAnimationThread(Player p, UUID uuid, BlockPosition blockPosition, Block posBlock) {
         return new BukkitRunnable() {
             @Override
             public void run() {

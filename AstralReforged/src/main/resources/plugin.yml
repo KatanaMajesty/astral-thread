@@ -4,3 +4,4 @@ version: ${version}
 api-version: 1.17
 author: KatanaMajesty
 depend: [ProtocolLib]
+load: STARTUP

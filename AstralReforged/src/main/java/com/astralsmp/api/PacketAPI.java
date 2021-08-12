@@ -86,7 +86,7 @@ public class PacketAPI {
                 new MinecraftKey(sound),
                 SoundCategory.d,
                 new Vec3D(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5),
-                0.5F, 0.75F);
+                1F, 0.75F);
     }
 
     public static PacketPlayOutCustomSoundEffect blockWalkSoundPacket(String sound, Block block) {
