@@ -23,15 +23,12 @@ repositories {
     mavenCentral()
     maven {url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'}
     maven {url 'https://repo.dmulloy2.net/repository/public'}
-    maven {url 'https://papermc.io/repo/repository/maven-public/'}
 }
 
 dependencies {
-    implementation 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
     implementation 'org.jetbrains:annotations:20.1.0'
     testImplementation 'junit:junit:4.13.1'
     implementation 'com.comphenix.protocol:ProtocolLib:4.7.0'
-    implementation 'org.spigotmc:spigot-api:1.17.1-R0.1-SNAPSHOT'
     implementation 'org.spigotmc:spigot:1.17.1-R0.1-SNAPSHOT'
 }
 

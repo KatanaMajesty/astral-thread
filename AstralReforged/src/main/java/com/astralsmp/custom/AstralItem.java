@@ -14,6 +14,7 @@ import org.bukkit.Note;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.NoteBlock;
 import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,6 +27,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Consumer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -204,7 +206,8 @@ public abstract class AstralItem implements Listener {
                 if (relative.getType() != Material.AIR && relative.getType() != Material.WATER) return;
                 if (event.getPlayer().getGameMode() == GameMode.SURVIVAL && isCorrectItem(item))
                     item.setAmount(item.getAmount() - 1);
-                api.sendPacket(PacketAPI.blockPlaceSoundPacket(placeSound, posToPlace), player);
+                runOnNearbyPlayers(posToPlace, 8, 8, 8,
+                        p -> api.sendPacket(PacketAPI.blockPlaceSoundPacket(placeSound, posToPlace), p));
                 api.sendPacket(PacketAPI.handSwingAnimationPacket(hand, player), player);
 
                 posToPlace.setType(Material.NOTE_BLOCK);
@@ -245,4 +248,12 @@ public abstract class AstralItem implements Listener {
                 && t.hasKey(CLASS_ID_B)
                 && t.get(CLASS_ID_B).asString().equals("placeable");
     }
+
+    private static void runOnNearbyPlayers(Block b, double v1, double v2, double v3, Consumer<Player> consumer) {
+        for (Entity e : b.getWorld().getNearbyEntities(b.getLocation().add(0.5, 0.5, 0.5), v1, v2, v3,
+                entity -> entity instanceof Player)) {
+            consumer.accept((Player) e);
+        }
+    }
+
 }

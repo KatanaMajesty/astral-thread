@@ -44,15 +44,16 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.*;
 
+// TODO: 13.08.2021 когда прыгаю и ломаю
 public abstract class AstralBlock implements Listener {
 
-    protected static final ProtocolManager protocol = AstralReforged.protocolManager;
-    protected static final PacketAPI api = new PacketAPI();
+    private static final ProtocolManager protocol = AstralReforged.protocolManager;
+    private static final PacketAPI api = new PacketAPI();
     private static final Map<UUID, BoundingBox> moveBox = new HashMap<>();
-    public static final Map<UUID, BlockPosition> breakMap = new HashMap<>();
+    private static final Map<UUID, Block> breakMap = new HashMap<>();
 
     static final String CLASS_ID = "astral_block";
-    private final Plugin plugin;
+    protected static final Plugin plugin = AstralReforged.getInstance();
     private Instrument instrument;
     private Note note;
     @Nullable
@@ -75,8 +76,7 @@ public abstract class AstralBlock implements Listener {
     private String walkSound;
     private String fallSound;
 
-    public AstralBlock(Plugin plugin) {
-        this.plugin = plugin;
+    public AstralBlock() {
         init();
         if (instrument == null
                 | (dropItem == null && defDropItem == null)
@@ -85,72 +85,17 @@ public abstract class AstralBlock implements Listener {
                 | walkSound == null
                 | fallSound == null
                 | dropCount == null) closeBlockCreation();
-        packetListener();
         plugin.getServer().getPluginManager().registerEvents(dropItem, plugin);
         if (silkDropItem != null) plugin.getServer().getPluginManager().registerEvents(silkDropItem, plugin);
         if (defDropItem != null) plugin.getServer().getPluginManager().registerEvents(defDropItem, plugin);
-
+        packetListener();
     }
 
     private void closeBlockCreation() {
         throw new NullPointerException(String.format("Field of BLOCK is Null at %s", getClass().getName()));
     }
 
-    public static void packetListener() {
-        protocol.addPacketListener(new PacketAdapter(getPlugin(), ListenerPriority.NORMAL,
-                PacketType.Play.Server.NAMED_SOUND_EFFECT,
-                PacketType.Play.Server.BLOCK_ACTION,
-                PacketType.Play.Client.BLOCK_DIG) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-                if (event.getPacketType() == PacketType.Play.Server.NAMED_SOUND_EFFECT
-                        && event.getPacket().getSoundEffects().read(0) == Sound.BLOCK_NOTE_BLOCK_BANJO)
-                    event.setCancelled(true);
-                if (event.getPacketType() == PacketType.Play.Server.BLOCK_ACTION
-                        && event.getPacket().getBlocks().read(0) == Material.NOTE_BLOCK)
-                    event.setCancelled(true);
-            }
-            @Override
-            public void onPacketReceiving(PacketEvent event) {
-                if (event.getPacketType() == PacketType.Play.Client.BLOCK_DIG) {
-                    System.out.println(1);
-                    Player p = event.getPlayer();
-                    if (p.getGameMode() == GameMode.CREATIVE) return;
-                    BlockPosition blockPosition = event.getPacket().getBlockPositionModifier().read(0);
-                    Block posBlock = blockPosition.toLocation(p.getWorld()).getBlock();
-                    EnumWrappers.PlayerDigType digEnum = event.getPacket().getPlayerDigTypes().read(0);
-                    UUID uuid = p.getUniqueId();
-                    if (digEnum == EnumWrappers.PlayerDigType.ABORT_DESTROY_BLOCK
-                            || digEnum == EnumWrappers.PlayerDigType.STOP_DESTROY_BLOCK) {
-                        // мб это можно лучше реализовать, хз
-                        Bukkit.getScheduler().callSyncMethod(plugin, () -> {
-                            for (Entity e : posBlock.getWorld().getNearbyEntities(posBlock.getLocation(), 30, 30, 30,
-                                    entity -> entity instanceof Player)) {
-                                api.sendPacket(PacketAPI.blockBreakAnimationPacket(posBlock, (byte) -1), (Player) e);
-                            }
-                            return null;
-                        });
-                        api.sendPacket(PacketAPI.fatigueRemovePacket(p), p);
-                        AstralBlock.breakMap.remove(uuid);
-                        return;
-                    }
-                    if (posBlock.getType() != Material.NOTE_BLOCK || isIncorrectBlock(posBlock))
-                        return;
-                    if (digEnum == EnumWrappers.PlayerDigType.START_DESTROY_BLOCK) {
-                        event.setCancelled(true);
-                        AstralBlock.breakMap.put(uuid, blockPosition);
-                        api.sendPacket(PacketAPI.fatigueApplyPacket(p), p);
-                    }
-                    breakSoundThread(blockPosition, posBlock, p, uuid).runTaskAsynchronously(plugin);
-                    breakAnimationThread(p, uuid, blockPosition, posBlock).runTaskAsynchronously(plugin);
-                }
-            }
-        });
-    }
-
     public abstract void init();
-
-    public Plugin getPlugin() {return this.plugin;}
 
     public Instrument getInstrument() {
         return this.instrument;
@@ -168,16 +113,8 @@ public abstract class AstralBlock implements Listener {
         this.note = note;
     }
 
-    public Material getMaterial() {
-        return material;
-    }
-
-    public void setMaterial(Material material) {
+    public void setMaterial(@Nullable Material material) {
         this.material = material;
-    }
-
-    public double getHardness() {
-        return hardness;
     }
 
     public void setHardness(double hardness) {
@@ -208,52 +145,24 @@ public abstract class AstralBlock implements Listener {
         this.fallSound = fallSound;
     }
 
-    public boolean isSilkTouchable() {
-        return isSilkTouchable;
-    }
-
     public void setSilkTouchable(boolean silkTouchable) {
         isSilkTouchable = silkTouchable;
     }
 
-    @Nullable
-    public AstralItem getDefDropItem() {
-        return defDropItem;
-    }
-
-    public void setDefDropItem(@org.jetbrains.annotations.Nullable AstralItem defDropItem) {
+    public void setDefDropItem(@Nullable AstralItem defDropItem) {
         this.defDropItem = defDropItem;
-    }
-
-    @Nullable
-    public Integer getDefDropCount() {
-        return defDropCount;
     }
 
     public void setDefDropCount(int defDropCount) {
         this.defDropCount = defDropCount;
     }
 
-    @Nullable
-    public AstralItem getSilkDropItem() {
-        return silkDropItem;
-    }
-
     public void setSilkDropItem(@Nullable AstralItem silkDropItem) {
         this.silkDropItem = silkDropItem;
     }
 
-    @Nullable
-    public Integer getSilkDropCount() {
-        return silkDropCount;
-    }
-
     public void setSilkDropCount(@Nullable Integer silkDropCount) {
         this.silkDropCount = silkDropCount;
-    }
-
-    public boolean isFortunable() {
-        return isFortunable;
     }
 
     public void setFortunable(boolean fortunable) {
@@ -283,7 +192,8 @@ public abstract class AstralBlock implements Listener {
     @EventHandler public void onAstralBlockClick(@NotNull PlayerInteractEvent e) {
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock().getType() == Material.NOTE_BLOCK) {
             e.setCancelled(true);
-            if (isIncorrectBlock(e.getClickedBlock())) return;
+            Block b = e.getClickedBlock();
+            if (isIncorrectBlock(b, this.instrument, this.note)) return;
             Player p = e.getPlayer();
             ItemStack main = p.getInventory().getItemInMainHand();
             if ((main.getType().isBlock() && !main.getType().isAir())) {
@@ -295,7 +205,7 @@ public abstract class AstralBlock implements Listener {
     @EventHandler public void onAstralBlockBreak(@NotNull BlockBreakEvent e) {
         if (e.getBlock().getType() == Material.NOTE_BLOCK) {
             Block b = e.getBlock();
-            if (isIncorrectBlock(b)) return;
+            if (isIncorrectBlock(b, this.instrument, this.note)) return;
             e.setDropItems(false);
             runOnNearbyPlayers(b, 16, 16, 16, player -> api.sendPacket(PacketAPI.blockBreakSoundPacket(breakSound, b), player));
             if (e.getPlayer().getGameMode() != GameMode.CREATIVE) getCorrectDrop(e.getPlayer(), b);
@@ -303,11 +213,15 @@ public abstract class AstralBlock implements Listener {
     }
 
     @EventHandler public void onAstralBlockWalk(@NotNull PlayerMoveEvent e) {
+        Player player = e.getPlayer();
+        if (player.getGameMode() == GameMode.SPECTATOR) return;
         Location l = e.getFrom();
         Block b = l.add(0, -1, 0).getBlock();
-        if (b.getType() != Material.NOTE_BLOCK || isIncorrectBlock(b) || e.getPlayer().getPose() == Pose.SNEAKING)
+        if (b.getType() != Material.NOTE_BLOCK
+                || isIncorrectBlock(b, this.instrument, this.note)
+                || player.getPose() == Pose.SNEAKING)
             return;
-        UUID uuid = e.getPlayer().getUniqueId();
+        UUID uuid = player.getUniqueId();
         Location l2 = e.getTo();
         if ((int) l.getX() - (int) l2.getX() == 0
                 && (int) l.getZ() - (int) l2.getZ() == 0)
@@ -331,7 +245,7 @@ public abstract class AstralBlock implements Listener {
 
     @EventHandler public void onAstralBlockPistonExtract(@NotNull BlockPistonExtendEvent e) {
         for (Block b : e.getBlocks()) {
-            if (b.getType() == Material.NOTE_BLOCK && !isIncorrectBlock(b)) {
+            if (b.getType() == Material.NOTE_BLOCK && !isIncorrectBlock(b, this.instrument, this.note)) {
                 e.setCancelled(true);
                 return;
             }
@@ -340,7 +254,7 @@ public abstract class AstralBlock implements Listener {
 
     @EventHandler public void onAstralBlockPistonRetract(@NotNull BlockPistonRetractEvent e) {
         for (Block b : e.getBlocks()) {
-            if (b.getType() == Material.NOTE_BLOCK && !isIncorrectBlock(b)) {
+            if (b.getType() == Material.NOTE_BLOCK && !isIncorrectBlock(b, this.instrument, this.note)) {
                 e.setCancelled(true);
                 return;
             }
@@ -389,7 +303,7 @@ public abstract class AstralBlock implements Listener {
     }
 
     // Переделать
-    public boolean isIncorrectBlock(@NotNull Block b) {
+    private static boolean isIncorrectBlock(@NotNull Block b, Instrument instrument, Note note) {
         if (b.getType() != Material.NOTE_BLOCK)
 //                || (!b.getMetadata(AstralItem.CLASS_ID).get(0).asString().equals(dropItem.getNmsName())
 //                && !(defDropItem != null && b.getMetadata(AstralItem.CLASS_ID).get(0).asString().equals(defDropItem.getNmsName()))
@@ -547,14 +461,57 @@ public abstract class AstralBlock implements Listener {
         return ticks / 20;
     }
 
-    public BukkitRunnable breakSoundThread(BlockPosition blockPosition, Block posBlock, Player p, UUID uuid) {
+    private void packetListener() {
+        protocol.addPacketListener(new PacketAdapter(plugin, ListenerPriority.NORMAL,
+                PacketType.Play.Server.NAMED_SOUND_EFFECT,
+                PacketType.Play.Server.BLOCK_ACTION,
+                PacketType.Play.Client.BLOCK_DIG) {
+            @Override
+            public void onPacketSending(PacketEvent event) {
+                if (event.getPacketType() == PacketType.Play.Server.NAMED_SOUND_EFFECT
+                        && event.getPacket().getSoundEffects().read(0) == Sound.BLOCK_NOTE_BLOCK_BANJO)
+                    event.setCancelled(true);
+                if (event.getPacketType() == PacketType.Play.Server.BLOCK_ACTION
+                        && event.getPacket().getBlocks().read(0) == Material.NOTE_BLOCK)
+                    event.setCancelled(true);
+            }
+            @Override
+            public void onPacketReceiving(PacketEvent event) {
+                if (event.getPacketType() == PacketType.Play.Client.BLOCK_DIG) {
+                    Player p = event.getPlayer();
+                    if (p.getGameMode() == GameMode.CREATIVE) return;
+                    BlockPosition blockPosition = event.getPacket().getBlockPositionModifier().read(0);
+                    Block posBlock = blockPosition.toLocation(p.getWorld()).getBlock();
+                    UUID uuid = p.getUniqueId();
+                    EnumWrappers.PlayerDigType digEnum = event.getPacket().getPlayerDigTypes().read(0);
+                    if (posBlock.getType() == Material.NOTE_BLOCK
+                            && digEnum == EnumWrappers.PlayerDigType.START_DESTROY_BLOCK
+                            && !isIncorrectBlock(posBlock, getInstrument(), getNote())) {
+                        api.sendPacket(PacketAPI.fatigueApplyPacket(p), p);
+                        event.setCancelled(true);
+                        breakMap.put(uuid, posBlock);
+                    } else if (breakMap.get(uuid) != null && breakMap.get(uuid) != posBlock && (digEnum == EnumWrappers.PlayerDigType.ABORT_DESTROY_BLOCK
+                            || digEnum == EnumWrappers.PlayerDigType.STOP_DESTROY_BLOCK)) {
+                        breakProcStop(plugin, posBlock, uuid, p);
+                        return;
+                    } else return;
+                    breakSoundThread(posBlock, p, uuid, breakSound).runTaskAsynchronously(plugin);
+                    breakAnimationThread(p, uuid, posBlock, realBreakTime(p)).runTaskAsynchronously(plugin);
+                    api.sendPacket(PacketAPI.blockBreakAnimationPacket(posBlock, (byte) -1), p);
+                }
+            }
+        });
+    }
+
+    private static BukkitRunnable breakSoundThread(Block posBlock, Player p, UUID uuid, String breakSound) {
         return new BukkitRunnable() {
             @Override
             public void run() {
                 try {
                     Thread.sleep(100);
                     while (breakMap.containsKey(uuid)) {
-                        if (breakMap.get(uuid) != blockPosition) break;
+                        if (breakMap.get(uuid) != posBlock)
+                            break;
                         api.sendPacket(PacketAPI.blockHitSoundPacket(breakSound, posBlock), p);
                         Thread.sleep(240);
                     }
@@ -566,18 +523,19 @@ public abstract class AstralBlock implements Listener {
         };
     }
 
-    public BukkitRunnable breakAnimationThread(Player p, UUID uuid, BlockPosition blockPosition, Block posBlock) {
+    private static BukkitRunnable breakAnimationThread(Player p, UUID uuid, Block posBlock, double breakTime) {
         return new BukkitRunnable() {
             @Override
             public void run() {
                 try {
-                    double millis = realBreakTime(p) * 1000;
+                    double millis = breakTime * 1000;
                     long b = (long) millis;
                     long cycle = b / 9;
                     byte dS = 0;
                     do {
                         Thread.sleep(cycle);
-                        if (breakMap.get(uuid) != blockPosition) break;
+                        if (breakMap.get(uuid)!= posBlock)
+                            break;
                         byte finalDS = dS;
                         Bukkit.getScheduler().callSyncMethod(plugin, () -> {
                             runOnNearbyPlayers(posBlock, 30, 30, 30,
@@ -605,7 +563,19 @@ public abstract class AstralBlock implements Listener {
         };
     }
 
-    private void runOnNearbyPlayers(Block b, double v1, double v2, double v3, Consumer<Player> consumer) {
+    private void breakProcStop(Plugin plugin, Block posBlock, UUID uuid, Player p) {
+        Bukkit.getScheduler().callSyncMethod(plugin, () -> {
+            for (Entity e : posBlock.getWorld().getNearbyEntities(posBlock.getLocation(), 30, 30, 30,
+                    entity -> entity instanceof Player)) {
+                api.sendPacket(PacketAPI.blockBreakAnimationPacket(posBlock, (byte) -1), (Player) e);
+            }
+            return null;
+        });
+        api.sendPacket(PacketAPI.fatigueRemovePacket(p), p);
+        breakMap.remove(uuid);
+    }
+
+    private static void runOnNearbyPlayers(Block b, double v1, double v2, double v3, Consumer<Player> consumer) {
         for (Entity e : b.getWorld().getNearbyEntities(b.getLocation().add(0.5, 0.5, 0.5), v1, v2, v3,
                 entity -> entity instanceof Player)) {
             consumer.accept((Player) e);

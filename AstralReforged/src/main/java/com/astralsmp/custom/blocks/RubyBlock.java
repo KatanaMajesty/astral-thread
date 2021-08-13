@@ -1,27 +1,14 @@
 package com.astralsmp.custom.blocks;
 
-import com.astralsmp.api.PacketAPI;
 import com.astralsmp.custom.AstralBlock;
 import com.astralsmp.custom.items.Ruby;
 import com.astralsmp.custom.items.RubyOre;
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.events.ListenerPriority;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.wrappers.BlockPosition;
-import com.comphenix.protocol.wrappers.EnumWrappers;
 import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-
-import java.util.UUID;
 
 public class RubyBlock extends AstralBlock {
 
-    public RubyBlock(Plugin plugin) {
-        super(plugin);
+    public RubyBlock() {
+        super();
     }
 
     @Override
@@ -36,9 +23,9 @@ public class RubyBlock extends AstralBlock {
          */
         setFortunable(true);
         setSilkTouchable(true);
-        setSilkDropItem(new RubyOre(getPlugin()));
+        setSilkDropItem(new RubyOre(plugin));
         setSilkDropCount(1);
-        setDropItem(new Ruby(getPlugin()));
+        setDropItem(new Ruby(plugin));
         setDropCount(5);
         setDefDropItem(null);
         setDefDropCount(0);
