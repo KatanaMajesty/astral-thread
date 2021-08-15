@@ -12,13 +12,13 @@ public class EumusBlock extends AstralItem {
 
     @Override
     public void init() {
-        setInstrument(Instrument.BANJO);
-        setNote(new Note(2));
+        setInstrument(Instrument.BELL);
+        setNote(new Note(1));
         setPlaceable(true);
         setNmsName("eumus");
         setItemName("Почва Края");
         setPlaceSound("block.dripstone_block.place");
         setLore(null);
-        setCustomModelDataID(9502);
+        setCustomModelDataID(9620);
     }
 }

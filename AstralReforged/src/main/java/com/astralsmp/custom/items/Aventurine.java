@@ -3,17 +3,17 @@ package com.astralsmp.custom.items;
 import com.astralsmp.custom.AstralItem;
 import org.bukkit.plugin.Plugin;
 
-public class Ruby extends AstralItem {
+public class Aventurine extends AstralItem {
 
-    public Ruby(Plugin plugin) {
+    public Aventurine(Plugin plugin) {
         super(plugin);
     }
 
     @Override
     public void init() {
-        setItemName("Рубин");
+        setItemName("Авантюриновый кристалл");
         setCustomModelDataID(9500);
-        setNmsName("ruby");
+        setNmsName("aventurine");
         setPlaceable(false);
         setLore(null);
     }

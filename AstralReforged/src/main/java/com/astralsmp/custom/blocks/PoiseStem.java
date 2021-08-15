@@ -3,23 +3,23 @@ package com.astralsmp.custom.blocks;
 import com.astralsmp.custom.AstralBlock;
 import org.bukkit.*;
 
-public class AspenLog extends AstralBlock {
-    public AspenLog() {
+public class PoiseStem extends AstralBlock {
+    public PoiseStem() {
         super();
     }
 
-    // TODO: 13.08.2021 не выпадает дроп при ломании рукой (скорее всего из-за setDropItem) 
+    // TODO: 13.08.2021 не выпадает дроп при ломании рукой (скорее всего из-за setDropItem)
     @Override
     public void init() {
-        com.astralsmp.custom.items.AspenLog aspenLog = new com.astralsmp.custom.items.AspenLog(plugin);
-        setDefDropItem(aspenLog);
+        com.astralsmp.custom.items.PoiseStem poiseStem = new com.astralsmp.custom.items.PoiseStem(plugin);
+        setDefDropItem(poiseStem);
         setDefDropCount(1);
-        setDropItem(aspenLog);
+        setDropItem(poiseStem);
         setDropCount(1);
         setMaterial(Material.WOODEN_AXE);
         setHardness(2);
-        setInstrument(Instrument.BANJO);
-        setNote(new Note(3));
+        setInstrument(Instrument.BELL);
+        setNote(new Note(2));
         setBreakSound("custom.block.wood.break");
         setFallSound("custom.block.wood.hit");
         setHitSound("custom.block.wood.hit");

@@ -332,20 +332,25 @@ public abstract class AstralBlock implements Listener {
                         if (isFortunable && item.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS))
                             drop.setAmount(fortuneMultiplier(item.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS), drop.getAmount()));
                     }
-                }
-                else if (defDropItem != null) {
-                    drop = defDropItem.getItem();
-                    drop.setAmount(defDropCount == null ? 1 : defDropCount);
-                } else return;
+                } else continue;
                 w.dropItemNaturally(b.getLocation(), drop);
                 return;
             }
         }
-        if (requiredItem.equals("null")) {
-            drop = dropItem.getItem();
-            drop.setAmount(dropCount);
-            w.dropItemNaturally(b.getLocation(), drop);
-        }
+        if (defDropItem != null) {
+            drop = defDropItem.getItem();
+            drop.setAmount(defDropCount == null ? 1 : defDropCount);
+        } else return;
+        w.dropItemNaturally(b.getLocation(), drop);
+        /*
+        Код ниже проверяет указан ли инструмент для ломания, если при null дропает обычный дроп.
+        Убрал, так как не видел ещё блоков, которые ломаются всеми инструментами одинаково.
+         */
+//        if (requiredItem.equals("null")) {
+//            drop = dropItem.getItem();
+//            drop.setAmount(dropCount);
+//            w.dropItemNaturally(b.getLocation(), drop);
+//        }
     }
 
     /**

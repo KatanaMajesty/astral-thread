@@ -34,7 +34,6 @@ public abstract class OrePopulator extends BlockPopulator {
     @Nullable
     private Material locMat;
     // Блок, который будет генерироваться
-    @NotNull
     private AstralBlock genB;
 
     public AstralReforged getPlugin() {

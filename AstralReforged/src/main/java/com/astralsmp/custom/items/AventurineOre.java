@@ -5,9 +5,9 @@ import org.bukkit.Instrument;
 import org.bukkit.Note;
 import org.bukkit.plugin.Plugin;
 
-public class RubyOre extends AstralItem {
+public class AventurineOre extends AstralItem {
 
-    public RubyOre(Plugin plugin) {
+    public AventurineOre(Plugin plugin) {
         super(plugin);
     }
 
@@ -17,9 +17,9 @@ public class RubyOre extends AstralItem {
         setNote(new Note(1));
         setPlaceable(true);
         setPlaceSound("block.stone.place");
-        setItemName("Рубиновая руда");
-        setCustomModelDataID(9501);
-        setNmsName("ruby_ore");
+        setItemName("Авантюриновая руда");
+        setCustomModelDataID(9600);
+        setNmsName("aventurine_pre");
         setLore(null);
     }
 }

@@ -1,11 +1,14 @@
 package com.astralsmp.world.end;
 
+import com.astralsmp.AstralReforged;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.NoteBlock;
 import org.bukkit.generator.BlockPopulator;
+import org.bukkit.util.noise.NoiseGenerator;
+import org.bukkit.util.noise.PerlinNoiseGenerator;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
@@ -14,47 +17,36 @@ public class AspenTreePopulator extends BlockPopulator {
 
     @Override
     public void populate(@NotNull World world, @NotNull Random random, @NotNull Chunk chunk) {
-        int x,y,z;
-        for (int i = 0; i < 2; i++) {
-            if (random.nextInt(100) < 20) {
+        int x, y, z;
+        for (int i = 0; i < 4; i++) {
+            if (random.nextInt(100) < 30) {
                 x = random.nextInt(15);
                 z = random.nextInt(15);
                 y = 90;
-                while (chunk.getBlock(x,y,z).getType() != Material.END_STONE && y > 60) {
-                    if (chunk.getBlock(x,y,z).getBiome() != Biome.SMALL_END_ISLANDS) return;
+                while (chunk.getBlock(x, y, z).getType() != Material.END_STONE && y > 60) {
+                    if (chunk.getBlock(x, y, z).getBiome() != Biome.END_MIDLANDS) return;
                     y--;
                 }
-                Block b = chunk.getBlock(x,y,z).getRelative(BlockFace.UP);
+                Block b = chunk.getBlock(x, y, z).getRelative(BlockFace.UP);
                 if (b.getRelative(BlockFace.DOWN).getType() == Material.END_STONE) makeStem(b);
                 else return;
                 decorateStem(b, random);
+                populateEumus(b, random);
                 int k = 0;
                 do {
                     k++;
                     makeStem(b.getRelative(BlockFace.UP, k));
-                } while(k < random.nextInt(3) + 4);
+                } while (k < random.nextInt(4) + 8);
                 b = b.getRelative(BlockFace.UP, k);
-                switch (random.nextInt(4)) {
-                    case 0 -> b = b.getRelative(BlockFace.SOUTH);
-                    case 1 -> b = b.getRelative(BlockFace.NORTH);
-                    case 2 -> b = b.getRelative(BlockFace.EAST);
-                    case 3 -> b = b.getRelative(BlockFace.WEST);
-                }
-                k = 0;
-                do {
-                    k++;
-                    makeStem(b.getRelative(BlockFace.UP, k));
-                    b.getRelative(BlockFace.UP, k);
-                } while(k <= random.nextInt(3) + 3);
-                b = b.getRelative(BlockFace.UP, k + 1);
-                k = 0;
+                NoiseGenerator n = new PerlinNoiseGenerator(world);
+
                 // генерим ниже блока генерации
+                // TODO: 13.08.2021 пофиксить баг с генерацией кроны и ствола тут (вспомнишь потом)
                 for (int j = 0; j < 6; j++) {
                     if (j < 4) {
                         createSquareCrown(2, b.getRelative(BlockFace.DOWN, j));
                         fillSquareCrown(1, b.getRelative(BlockFace.DOWN, j), random);
-                    }
-                    else createSquareCrownEmpty(2, b.getRelative(BlockFace.DOWN, j), random);
+                    } else createSquareCrownEmpty(2, b.getRelative(BlockFace.DOWN, j), random);
                 }
                 // генерим выше блока генерации
                 for (int j = 0; j < 4; j++) {
@@ -69,6 +61,10 @@ public class AspenTreePopulator extends BlockPopulator {
                         createSquareCrown(1, b.getRelative(BlockFace.UP, j), random);
                     }
                 }
+            }
+        }
+
+
 
 //                fillSquareCrown(1, b.getRelative(BlockFace.DOWN), random);
 //                fillSquareCrown(1, b.getRelative(BlockFace.DOWN, 2), random);
@@ -77,9 +73,8 @@ public class AspenTreePopulator extends BlockPopulator {
 //                createSquareCrown(2, b.getRelative(BlockFace.DOWN, 3));
 //                createSquareCrownEmpty(2, b.getRelative(BlockFace.DOWN, 4), random);
 //                createSquareCrownEmpty(2, b.getRelative(BlockFace.DOWN, 5), random);
-            }
-        }
     }
+
 
     private static void createSquareCrown(int d, Block b) {
         int r = d + d + 1;
@@ -145,6 +140,7 @@ public class AspenTreePopulator extends BlockPopulator {
         }
     }
 
+    // TODO: 13.08.2021 пофиксить генерацию ствола дерева и его замены почвой
     // Рандом топ
     @SuppressWarnings("all")
     private static void fillSquareCrown(int d, Block b, Random random) {
@@ -155,7 +151,7 @@ public class AspenTreePopulator extends BlockPopulator {
                 boolean center = rb.getX() == b.getX() && rb.getZ() == b.getZ();
                 if (random.nextInt(100) > 85
                         && rb.getRelative(BlockFace.UP).getType() == Material.AIR
-                        && !center || rb.getRelative(BlockFace.DOWN).getType() == Material.AIR)
+                        || rb.getRelative(BlockFace.DOWN).getType() == Material.AIR)
                     continue;
                 makeCrown(rb);
             }
@@ -173,8 +169,10 @@ public class AspenTreePopulator extends BlockPopulator {
                     case 3 -> r = b.getRelative(BlockFace.WEST).getRelative(BlockFace.UP, i);
                     default -> r = null;
                 }
-                if (r.getRelative(BlockFace.DOWN).getType() != Material.AIR && random.nextInt(100) < 70)
+                if (r.getRelative(BlockFace.DOWN).getType() != Material.AIR && random.nextInt(100) < 70) {
                     makeStem(r);
+                }
+
             }
         }
     }
@@ -182,16 +180,55 @@ public class AspenTreePopulator extends BlockPopulator {
     private static void makeStem(Block b) {
         b.setType(Material.NOTE_BLOCK);
         NoteBlock nb = (NoteBlock) b.getBlockData();
-        nb.setNote(new Note(3));
-        nb.setInstrument(Instrument.BANJO);
+        nb.setNote(new Note(2));
+        nb.setInstrument(Instrument.BELL);
         b.setBlockData(nb);
     }
 
     private static void makeCrown(Block b) {
         b.setType(Material.NOTE_BLOCK);
         NoteBlock nb = (NoteBlock) b.getBlockData();
-        nb.setNote(new Note(2));
-        nb.setInstrument(Instrument.BANJO);
+        nb.setNote(new Note(1));
+        nb.setInstrument(Instrument.BELL);
         b.setBlockData(nb);
+    }
+
+    private static void populateEumus(Block b, Random rand) {
+        b = b.getRelative(BlockFace.DOWN);
+        for (int i = 0; i < 2; i++) {
+            BlockFace face1;
+            BlockFace face2 = null;
+            switch (i) {
+                case 0 -> face1 = BlockFace.SOUTH;
+                case 1 -> face1 = BlockFace.NORTH;
+                default -> face1 = null;
+            }
+            Block r;
+            for (int j = 0; j < 2; j++) {
+                switch (j) {
+                    case 0 -> face2 = BlockFace.EAST;
+                    case 1 -> face2 = BlockFace.WEST;
+                }
+                int someRandInt = rand.nextInt(5);
+                for (int l = 0; l < someRandInt+8; l++) { // 3
+                    r = b.getRelative(face1, l); // 3
+                    for (int p = 0; p < someRandInt+9-l; p++) {
+                        if (rand.nextInt(100) < 300/(someRandInt+p+1)) {
+                            if (r.getRelative(face2, p).getRelative(BlockFace.UP).getType() == Material.END_STONE) {
+                                makeCrown(r.getRelative(face2, p).getRelative(BlockFace.UP));
+                            } else if (r.getRelative(face2, p).getRelative(BlockFace.DOWN).getType() == Material.END_STONE
+                                    && r.getRelative(face2, p).getType() == Material.AIR) {
+                                makeCrown(r.getRelative(face2, p).getRelative(BlockFace.DOWN));
+                            } else if (r.getRelative(face2, p).getType() != Material.AIR) {
+                                makeCrown(r.getRelative(face2, p));
+                            }
+                        }
+
+                    }
+                }
+            }
+
+
+        }
     }
 }

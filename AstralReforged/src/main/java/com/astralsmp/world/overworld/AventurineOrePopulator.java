@@ -4,9 +4,9 @@ import com.astralsmp.AstralReforged;
 import com.astralsmp.world.OrePopulator;
 import org.bukkit.Material;
 
-public class RubyOrePopulator extends OrePopulator {
+public class AventurineOrePopulator extends OrePopulator {
 
-    public RubyOrePopulator(AstralReforged plugin) {
+    public AventurineOrePopulator(AstralReforged plugin) {
         super(plugin);
     }
 
@@ -15,7 +15,7 @@ public class RubyOrePopulator extends OrePopulator {
         setChance(60);
         setMaxLodeC(4);
         setContChance(80);
-        setGenB(getPlugin().rubyBlock);
+        setGenB(getPlugin().aventurineOre);
         setLocMat(Material.STONE);
         setY1(3);
         setY2(20);

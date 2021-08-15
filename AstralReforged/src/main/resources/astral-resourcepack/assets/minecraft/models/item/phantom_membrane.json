@@ -4,9 +4,10 @@
 	  "layer0": "item/phantom_membrane"
 	},
 	"overrides": [
-	  {"predicate": {"custom_model_data":9500}, "model": "custom/custom_items/ruby"},
-	  {"predicate": {"custom_model_data":9501}, "model": "custom/custom_items/ruby_ore"},
-	  {"predicate": {"custom_model_data":9502}, "model": "custom/custom_items/eumus"},
-	  {"predicate": {"custom_model_data":9503}, "model": "custom/custom_items/aspen_log"}
+	  {"predicate": {"custom_model_data":9500}, "model": "custom_items/aventurine"},
+	  {"predicate": {"custom_model_data":9600}, "model": "custom_items/aventurine_ore"},
+	  {"predicate": {"custom_model_data":9620}, "model": "custom_items/eumus"},
+	  {"predicate": {"custom_model_data":9621}, "model": "custom_items/aspen_log"},
+	  {"predicate": {"custom_model_data":9622}, "model": "custom_items/chiseled_end_stone_bricks"}
 	]
   }

@@ -2,9 +2,9 @@
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"textures": {
-		"0": "custom/custom_items/aspen_log",
-		"1": "custom/custom_items/aspen_log_top",
-		"particle": "custom/custom_items/aspen_log"
+		"0": "custom/poise_stem",
+		"1": "custom/poise_stem_top",
+		"particle": "custom/poise_stem"
 	},
 	"elements": [
 		{

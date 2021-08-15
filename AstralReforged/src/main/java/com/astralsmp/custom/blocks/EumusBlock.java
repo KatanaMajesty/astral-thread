@@ -10,8 +10,8 @@ public class EumusBlock extends AstralBlock {
 
     @Override
     public void init() {
-        setInstrument(Instrument.BANJO);
-        setNote(new Note(2));
+        setInstrument(Instrument.BELL);
+        setNote(new Note(1));
         setFortunable(false);
         setHardness(1.5);
         setDefDropItem(null);

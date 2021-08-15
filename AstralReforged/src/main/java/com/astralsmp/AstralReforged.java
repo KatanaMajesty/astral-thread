@@ -1,13 +1,14 @@
 package com.astralsmp;
 
-import com.astralsmp.custom.blocks.AspenLog;
+import com.astralsmp.custom.blocks.PoiseStem;
+import com.astralsmp.custom.blocks.ChiseledEndStoneBricks;
 import com.astralsmp.custom.blocks.EumusBlock;
-import com.astralsmp.custom.blocks.RubyBlock;
+import com.astralsmp.custom.blocks.AventurineOre;
 import com.astralsmp.modules.BlockRelated;
 import com.astralsmp.modules.WoodRestore;
 import com.astralsmp.world.end.AspenTreePopulator;
-import com.astralsmp.world.end.EumusPopulator;
-import com.astralsmp.world.overworld.RubyOrePopulator;
+//import com.astralsmp.world.end.EumusPopulator;
+import com.astralsmp.world.overworld.AventurineOrePopulator;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import org.bukkit.Bukkit;
@@ -20,36 +21,38 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class AstralReforged extends JavaPlugin implements Listener {
 
     public static ProtocolManager protocolManager = null;
-    public RubyBlock rubyBlock;
+    public AventurineOre aventurineOre;
     public EumusBlock eumusBlock;
-    public AspenLog aspenLog;
+    public PoiseStem poiseStem;
+    public ChiseledEndStoneBricks chiseledEndStoneBricks;
 
     @EventHandler
     public void onWInit(WorldInitEvent e) {
         World w = e.getWorld();
         if (w.getEnvironment() == World.Environment.THE_END) {
-            w.getPopulators().add(new EumusPopulator());
             w.getPopulators().add(new AspenTreePopulator());
         }
         if (w.getEnvironment() == World.Environment.NORMAL) {
-            w.getPopulators().add(new RubyOrePopulator(this));
+            w.getPopulators().add(new AventurineOrePopulator(this));
         }
     }
 
     @Override
     public void onEnable() {
         protocolManager = ProtocolLibrary.getProtocolManager();
+        chiseledEndStoneBricks = new ChiseledEndStoneBricks();
         eumusBlock = new EumusBlock();
-        rubyBlock = new RubyBlock();
-        aspenLog = new AspenLog();
+        aventurineOre = new AventurineOre();
+        poiseStem = new PoiseStem();
 
         BlockRelated.initReplaceableArray();
         BlockRelated.initWoodenArray();
 
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(eumusBlock, this);
-        getServer().getPluginManager().registerEvents(aspenLog, this);
-        getServer().getPluginManager().registerEvents(rubyBlock, this);
+        getServer().getPluginManager().registerEvents(poiseStem, this);
+        getServer().getPluginManager().registerEvents(aventurineOre, this);
+        getServer().getPluginManager().registerEvents(chiseledEndStoneBricks, this);
 
         getServer().getPluginManager().registerEvents(new WoodRestore(this), this);
 

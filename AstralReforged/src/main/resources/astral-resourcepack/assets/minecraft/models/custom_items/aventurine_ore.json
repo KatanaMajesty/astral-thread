@@ -1,9 +1,9 @@
 {
-	"credit": "Made with Blockbench",
+	"credit": "Для Astral SMP",
 	"parent": "block/block",
 	"textures": {
-		"0": "custom/custom_items/eumus",
-		"particle": "custom/custom_items/eumus"
+		"0": "custom/aventurine_ore",
+		"particle": "custom/aventurine_ore"
 	},
 	"elements": [
 		{

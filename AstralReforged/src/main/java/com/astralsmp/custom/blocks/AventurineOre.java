@@ -1,13 +1,12 @@
 package com.astralsmp.custom.blocks;
 
 import com.astralsmp.custom.AstralBlock;
-import com.astralsmp.custom.items.Ruby;
-import com.astralsmp.custom.items.RubyOre;
+import com.astralsmp.custom.items.Aventurine;
 import org.bukkit.*;
 
-public class RubyBlock extends AstralBlock {
+public class AventurineOre extends AstralBlock {
 
-    public RubyBlock() {
+    public AventurineOre() {
         super();
     }
 
@@ -17,15 +16,11 @@ public class RubyBlock extends AstralBlock {
         setNote(new Note(1));
         setMaterial(Material.IRON_PICKAXE);
         setHardness(3);
-        /*
-        setDropItem(new Ruby()) создаёт каждый сломанный блок новый объект кастомного предмета
-        Пересмотреть эту функцию и попробовать оптимизировать, так как это может вызывать нагрузку
-         */
         setFortunable(true);
         setSilkTouchable(true);
-        setSilkDropItem(new RubyOre(plugin));
+        setSilkDropItem(new com.astralsmp.custom.items.AventurineOre(plugin));
         setSilkDropCount(1);
-        setDropItem(new Ruby(plugin));
+        setDropItem(new Aventurine(plugin));
         setDropCount(5);
         setDefDropItem(null);
         setDefDropCount(0);
